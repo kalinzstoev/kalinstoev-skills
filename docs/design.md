@@ -44,8 +44,8 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   web-hosted photo from this column, so hosted photos would work if ever wanted.)
 - Item specifics are **not** in the CSV: a test upload on 2026-10-24 with `C:Brand` and
   `C:Colour` columns went through, but the draft had no specifics. On the first real listing
-  eBay's AI filled them itself, so they are not repeated in the description; the preview lists
-  them as a fallback for anything eBay misses.
+  eBay's AI filled them itself; the filled ones are also listed in the description's DETAILS
+  section, as the user's template asks.
   eBay's editor prefills item specifics from title keywords and photos ("Suggested item
   specifics"), and inferred some from the category (Department, Type, Style), so the title
   should carry brand, model, size and colour.
@@ -59,11 +59,11 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
 - Item specifics: the category's usual required and recommended aspects (eBay UK names, e.g.
   `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
-  Shown in the preview only (eBay's AI fills the fields; I fix any it misses).
+  Listed in the description's DETAILS (eBay's AI fills the fields; I fix any it misses).
 - Title: up to 80 characters, the words a buyer would search for, no filler or caps.
-- Description: minimal HTML (`<br>`, `<b>`, typed `•` bullets, full stops) that still reads when
-  eBay shows it as plain text with tags and line breaks stripped, as happened on the first
-  listing. Short intro, bullets of features, condition and defects, what's included. No templates, banners or emojis, and no claims the photos don't support.
+- Description: the user's template (in `SKILL.md`): a title line, one condition sentence, then
+  FEATURES, CONDITION: <GRADE>, INCLUDED and DETAILS sections with typed `•` bullets. Plain text
+  with `<br>` line breaks only, no other HTML. No templates, banners or emojis, and no claims the photos don't support.
 - Price: Claude's estimate with a short reason, checked with a web search for similar items
   where useful. I set the final price in the preview or in eBay.
 - Postage, returns, payment and Best Offer are set in eBay when I finish the draft.

@@ -99,26 +99,51 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   the final price.
 - **specifics:** the item specifics a buyer would filter on for this category, with eBay UK
   names (`Colour`, not `Color`; `UK Shoe Size`). Leave a value `""` when the photos don't show
-  it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns) and
-  eBay's AI usually fills them, so they only appear in the preview as a fallback list.
-- **description_html:** minimal HTML that still reads well when eBay strips the tags. Some
-  eBay views show the description as plain text with all tags and line breaks removed (seen on
-  the first real listing, 2026-10-24), so `<p>`/`<ul>` structure is lost there. Use only `<br>`
-  line breaks, `<b>` labels, `•` bullet characters typed as text, and end every line with a
-  full stop. No styles, images, banners or emojis:
+  it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns);
+  eBay's AI usually fills them, and the filled ones also go in the description's DETAILS.
+- **description_html:** follow the user's template exactly (agreed 2026-10-24). It is plain
+  text laid out in lines; write each line break as `<br>` (a blank line is `<br><br>`), with no
+  other tags, styles, images or emojis. Section headings are in capitals, bullets are typed `•`
+  characters:
 
-  ```html
-  One or two plain sentences: what it is and the overall condition.<br><br>
-  • Key feature.<br>
-  • Key feature.<br><br>
-  <b>Condition:</b> honest detail, including every defect visible in the photos.<br><br>
-  <b>Included:</b> what's in the photos (box, charger, manual) and nothing else.
+  ```text
+  Rains Backpack – Mint Green
+
+  Barely used, only worn a few times, and in near-new condition.
+
+  FEATURES
+  • Matte rubberised outer with flap top and swivel hook clip closure
+  • Front slip pocket
+  • Black grab handle and adjustable shoulder straps
+  • Padded back panel with vertical zip pocket
+  • Grey lined main compartment with inner sleeve
+
+  CONDITION: EXCELLENT
+  • One small chip on the metal swivel clip (see photos)
+  • Slight marks on the strap end where it passes through the buckle
+  • No other visible wear
+
+  INCLUDED
+  The backpack only.
+
+  DETAILS
+  Brand: Rains
+  Model: Backpack
+  Colour: Mint green
+  Department: Unisex
+  Closure: Clip
   ```
 
-  Stripped of tags this becomes "…condition. • Key feature. • Key feature. Condition: …",
-  which still reads. Don't repeat the item specifics (brand, colour, size…) as a list: eBay's
-  AI fills those fields from the title and photos, so they would be redundant. Never claim it works,
-  is genuine, or is complete unless the photos show it; put questions for the user in `notes`.
+  - First line: brand, model and what it is, then ` – ` and the colour or key variant.
+  - Second: one sentence on overall condition and use.
+  - FEATURES: what the photos show, one per bullet, no full stops.
+  - CONDITION: the grade in capitals (EXCELLENT, VERY GOOD, GOOD, FAIR or NEW), then a bullet for
+    every defect visible in the photos, ending with "No other visible wear" when true.
+  - INCLUDED: what's in the photos (box, charger, manual) and nothing else.
+  - DETAILS: the filled-in specifics as `Name: value` lines (skip blank ones).
+
+  Never claim it works, is genuine, or is complete unless the photos show it; put questions for
+  the user in `notes`.
 - **photos:** paths relative to the item folder, best photo first (the user will add photos in
   eBay in that order).
 - **notes:** anything the user should check or tell you (does it work, the exact size, missing
@@ -144,7 +169,7 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   3. Open each draft in Seller Hub or the eBay app. Its Custom label (SKU) is the item id. Then:
      add the photos (from the phone, in the order in `item.json`; eBay asks for at least 5),
      pick the condition, check the category, apply the item specifics eBay suggests and fill
-     any required ones it misses (from the preview's table), check
+     any required ones it misses (from the description's DETAILS), check
      postage, and publish.
 - Items marked `in-csv` are not written again. If an upload failed and the user wants it redone,
   set those items back to `approved` and rerun `csv`.
