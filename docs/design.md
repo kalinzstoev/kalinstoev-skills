@@ -37,13 +37,19 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 - `Action` is always `Draft` and the code refuses to write anything else (another value, such as
   `Add`, would create a live listing). `Format` is `FixedPrice`, `Quantity` 1.
 - `Custom label (SKU)` is the item id, so a draft can be matched back to its folder.
-- `Condition ID` is `NEW` or `USED` only. The detailed condition and any defects go in the
-  description; I can refine the condition in eBay.
-- `Item photo URL` is left empty: I add the photos on the phone.
+- `Condition ID` is `NEW` or `USED` only, and the test draft showed eBay does not set the
+  condition from it (the value lands in the condition description). I pick the condition in
+  eBay; Claude suggests one in the preview. Defects go in the description.
+- `Item photo URL` is left empty: I add the photos on the phone. (The test draft did import a
+  web-hosted photo from this column, so hosted photos would work if ever wanted.)
 - Item specifics are **not** in the CSV: a test upload on 2026-10-24 with `C:Brand` and
   `C:Colour` columns went through, but the draft had no specifics. They go in a "Details" list
-  in the description instead (useful to buyers and to eBay's own suggestions), and the preview
-  shows them so I can copy them into eBay.
+  in the description instead, and the preview shows them so I can copy them into eBay.
+  eBay's editor prefills item specifics from title keywords and photos ("Suggested item
+  specifics"), and inferred some from the category (Department, Type, Style), so the title
+  should carry brand, model, size and colour.
+- What did carry over in the test draft: title, description, price, quantity, category and the
+  photo. Category 47140 showed as Men's Shoes > Trainers. Listing fee showed £0.00.
 
 ## Listing rules
 

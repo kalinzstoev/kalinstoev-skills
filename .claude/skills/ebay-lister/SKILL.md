@@ -61,7 +61,7 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   "id": "03-nike-air-max-90",
   "status": "draft",
   "title": "Nike Air Max 90 Men's Trainers UK 9 Blue White Leather",
-  "category_id": "15709",
+  "category_id": "47140",
   "category_name": "Clothes, Shoes & Accessories > Men > Men's Shoes > Trainers",
   "condition": "USED",
   "price": 35.00,
@@ -82,13 +82,18 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 
 - **title:** at most 80 characters. Start with brand and model, then what it is, then
   size, colour and key features: the words a buyer would search for. No filler ("L@@K", "wow"),
-  no all-caps, no claims the photos don't support.
+  no all-caps, no claims the photos don't support. The title matters most: it is one of the
+  two fields that reliably carry into the draft, and eBay prefills item specifics from title
+  keywords, so get brand, model, size and colour into it where they fit.
 - **category_id:** the eBay **UK** leaf category for the item. Use what you know, and web search
   when unsure (eBay UK category browse pages show the ID at the end of the URL). Always set
   `category_name` so the user can see in the preview whether it's right. Note in `notes` if you
   are not sure.
 - **condition:** `NEW` (unused, with tags or in the box) or `USED`. The drafts template only takes
-  these two. Describe the real condition in the description.
+  these two, and in the test draft eBay left the condition itself unset (the value only went into
+  the condition description), so the user picks it in eBay. Put the condition you would choose
+  (e.g. "Pre-owned - Good", "New with box") in `notes`, and describe the real condition in the
+  description.
 - **price:** your estimate in GBP for a Buy It Now listing that sells within a few weeks. Search
   the web for similar items when that helps, and give the reason in `price_note`. The user sets
   the final price.
@@ -138,8 +143,9 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
      open and resave it in Excel first.
   2. Check the upload result for errors.
   3. Open each draft in Seller Hub or the eBay app. Its Custom label (SKU) is the item id. Then:
-     add the photos (from the phone, in the order in `item.json`), check the category, fill
-     the item specifics (copy them from the preview's table or the description's Details), set
-     the detailed condition and postage, and publish.
+     add the photos (from the phone, in the order in `item.json`; eBay asks for at least 5),
+     pick the condition, check the category, check the item specifics eBay suggests and fill
+     the required ones it misses (from the preview's table or the description's Details), check
+     postage, and publish.
 - Items marked `in-csv` are not written again. If an upload failed and the user wants it redone,
   set those items back to `approved` and rerun `csv`.
