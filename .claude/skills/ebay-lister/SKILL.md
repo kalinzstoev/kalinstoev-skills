@@ -99,8 +99,8 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   the final price.
 - **specifics:** the item specifics a buyer would filter on for this category, with eBay UK
   names (`Colour`, not `Color`; `UK Shoe Size`). Leave a value `""` when the photos don't show
-  it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns), so
-  they go into the description and the user can copy them into eBay.
+  it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns) and
+  eBay's AI usually fills them, so they only appear in the preview as a fallback list.
 - **description_html:** minimal HTML that still reads well when eBay strips the tags. Some
   eBay views show the description as plain text with all tags and line breaks removed (seen on
   the first real listing, 2026-10-24), so `<p>`/`<ul>` structure is lost there. Use only `<br>`
@@ -112,13 +112,12 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   • Key feature.<br>
   • Key feature.<br><br>
   <b>Condition:</b> honest detail, including every defect visible in the photos.<br><br>
-  <b>Included:</b> what's in the photos (box, charger, manual) and nothing else.<br><br>
-  <b>Details:</b> Brand: Nike. Model: Air Max 90. UK Shoe Size: 9.
+  <b>Included:</b> what's in the photos (box, charger, manual) and nothing else.
   ```
 
-  Stripped of tags this becomes "…condition. • Key feature. • Key feature. Condition: …
-  Details: Brand: Nike. Model: Air Max 90.", which still reads. The Details line repeats the
-  filled-in specifics (skip blank ones). Never claim it works,
+  Stripped of tags this becomes "…condition. • Key feature. • Key feature. Condition: …",
+  which still reads. Don't repeat the item specifics (brand, colour, size…) as a list: eBay's
+  AI fills those fields from the title and photos, so they would be redundant. Never claim it works,
   is genuine, or is complete unless the photos show it; put questions for the user in `notes`.
 - **photos:** paths relative to the item folder, best photo first (the user will add photos in
   eBay in that order).
@@ -144,8 +143,8 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   2. Check the upload result for errors.
   3. Open each draft in Seller Hub or the eBay app. Its Custom label (SKU) is the item id. Then:
      add the photos (from the phone, in the order in `item.json`; eBay asks for at least 5),
-     pick the condition, check the category, check the item specifics eBay suggests and fill
-     the required ones it misses (from the preview's table or the description's Details), check
+     pick the condition, check the category, apply the item specifics eBay suggests and fill
+     any required ones it misses (from the preview's table), check
      postage, and publish.
 - Items marked `in-csv` are not written again. If an upload failed and the user wants it redone,
   set those items back to `approved` and rerun `csv`.

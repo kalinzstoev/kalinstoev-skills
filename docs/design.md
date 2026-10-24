@@ -43,8 +43,9 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 - `Item photo URL` is left empty: I add the photos on the phone. (The test draft did import a
   web-hosted photo from this column, so hosted photos would work if ever wanted.)
 - Item specifics are **not** in the CSV: a test upload on 2026-10-24 with `C:Brand` and
-  `C:Colour` columns went through, but the draft had no specifics. They go in a "Details" list
-  in the description instead, and the preview shows them so I can copy them into eBay.
+  `C:Colour` columns went through, but the draft had no specifics. On the first real listing
+  eBay's AI filled them itself, so they are not repeated in the description; the preview lists
+  them as a fallback for anything eBay misses.
   eBay's editor prefills item specifics from title keywords and photos ("Suggested item
   specifics"), and inferred some from the category (Department, Type, Style), so the title
   should carry brand, model, size and colour.
@@ -58,7 +59,7 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
 - Item specifics: the category's usual required and recommended aspects (eBay UK names, e.g.
   `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
-  Written into the description and the preview; I fill eBay's fields when finishing the draft.
+  Shown in the preview only (eBay's AI fills the fields; I fix any it misses).
 - Title: up to 80 characters, the words a buyer would search for, no filler or caps.
 - Description: minimal HTML (`<br>`, `<b>`, typed `•` bullets, full stops) that still reads when
   eBay shows it as plain text with tags and line breaks stripped, as happened on the first
