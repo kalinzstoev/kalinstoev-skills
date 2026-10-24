@@ -57,6 +57,7 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 - Marketplace: **eBay UK**, GBP, Buy It Now (fixed price).
 - Category: the eBay UK leaf category ID that fits the item, from Claude's knowledge, checked
   with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
+  On the first real listing eBay picked the category up correctly, so a best guess is enough.
 - Item specifics: the category's usual required and recommended aspects (eBay UK names, e.g.
   `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
   Listed in the description's DETAILS (eBay's AI fills the fields; I fix any it misses).
