@@ -6,10 +6,8 @@ A small home tool: take several photos of an item and get it listed on my eBay a
 as a **Buy It Now** listing with a good title, description, item specifics and price.
 Volume is low (about 10–15 items in total), so favour simple and reliable over scalable.
 
-Nothing is decided yet beyond that. Open questions include: how the price is set (sold
-comps vs. Claude's estimate), whether I review each draft before it goes live (default:
-yes, nothing posts without my approval), eBay API vs. bulk-upload spreadsheet, and
-language (Python is installed). Settle these with `/grill-me` before writing code.
+The design is settled in `docs/design.md` (from a `/grill-me` session). Follow it, and
+update it first if the plan changes.
 
 ## Environment
 
