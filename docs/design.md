@@ -60,8 +60,9 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
   Written into the description and the preview; I fill eBay's fields when finishing the draft.
 - Title: up to 80 characters, the words a buyer would search for, no filler or caps.
-- Description: clean, simple HTML. Short intro, bullet list of features and condition, defects,
-  what's included. No templates, banners or emojis, and no claims the photos don't support.
+- Description: minimal HTML (`<br>`, `<b>`, typed `•` bullets, full stops) that still reads when
+  eBay shows it as plain text with tags and line breaks stripped, as happened on the first
+  listing. Short intro, bullets of features, condition and defects, what's included. No templates, banners or emojis, and no claims the photos don't support.
 - Price: Claude's estimate with a short reason, checked with a web search for similar items
   where useful. I set the final price in the preview or in eBay.
 - Postage, returns, payment and Best Offer are set in eBay when I finish the draft.

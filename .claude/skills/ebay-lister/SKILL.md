@@ -101,24 +101,24 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   names (`Colour`, not `Color`; `UK Shoe Size`). Leave a value `""` when the photos don't show
   it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns), so
   they go into the description and the user can copy them into eBay.
-- **description_html:** clean, simple HTML, no styles, images, banners or emojis:
+- **description_html:** minimal HTML that still reads well when eBay strips the tags. Some
+  eBay views show the description as plain text with all tags and line breaks removed (seen on
+  the first real listing, 2026-10-24), so `<p>`/`<ul>` structure is lost there. Use only `<br>`
+  line breaks, `<b>` labels, `•` bullet characters typed as text, and end every line with a
+  full stop. No styles, images, banners or emojis:
 
   ```html
-  <p>One or two plain sentences: what it is and the overall condition.</p>
-  <ul>
-    <li>Key feature</li>
-    <li>Key feature</li>
-  </ul>
-  <p><b>Condition:</b> honest detail, including every defect visible in the photos.</p>
-  <p><b>Included:</b> what's in the photos (box, charger, manual) and nothing else.</p>
-  <p><b>Details:</b></p>
-  <ul>
-    <li>Brand: Nike</li>
-    <li>Model: Air Max 90</li>
-  </ul>
+  One or two plain sentences: what it is and the overall condition.<br><br>
+  • Key feature.<br>
+  • Key feature.<br><br>
+  <b>Condition:</b> honest detail, including every defect visible in the photos.<br><br>
+  <b>Included:</b> what's in the photos (box, charger, manual) and nothing else.<br><br>
+  <b>Details:</b> Brand: Nike. Model: Air Max 90. UK Shoe Size: 9.
   ```
 
-  The Details list repeats the filled-in specifics (skip blank ones). Never claim it works,
+  Stripped of tags this becomes "…condition. • Key feature. • Key feature. Condition: …
+  Details: Brand: Nike. Model: Air Max 90.", which still reads. The Details line repeats the
+  filled-in specifics (skip blank ones). Never claim it works,
   is genuine, or is complete unless the photos show it; put questions for the user in `notes`.
 - **photos:** paths relative to the item folder, best photo first (the user will add photos in
   eBay in that order).
