@@ -1,0 +1,301 @@
+#!/usr/bin/env python3
+"""Helpers for the ebay-lister skill: build a preview page and write eBay's drafts CSV.
+
+Standard library only, so it runs anywhere Python 3 does (container or Windows).
+
+    python ebay_lister.py preview [--items items] [--out preview.html]
+    python ebay_lister.py csv     [--items items] [--out-dir out]
+
+Each item lives in items/<id>/item.json next to a photos/ folder. See SKILL.md for the
+item.json fields.
+"""
+
+import argparse
+import csv
+import datetime
+import html
+import json
+import re
+import sys
+from pathlib import Path
+
+# The only Action this tool may ever write. Anything else (e.g. "Add") would create a
+# live listing when the CSV is uploaded.
+ACTION = "Draft"
+
+# Copied from eBay's UK "Create drafts" template (Version=0.0.2), Seller Hub → Reports.
+INFO_LINES = [
+    ["#INFO", "Version=0.0.2", "Template= eBay-draft-listings-template_GB"],
+    ["#INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find "
+     "the category ID for your listings here: "
+     "https://pages.ebay.com/sellerinformation/news/categorychanges.html"],
+    ["#INFO After you've successfully uploaded your draft from the Seller Hub Reports tab, "
+     "complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts"],
+    ["#INFO"],
+]
+ACTION_HEADER = "Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8)"
+BASE_COLUMNS = [
+    ACTION_HEADER, "Custom label (SKU)", "Category ID", "Title", "UPC", "Price", "Quantity",
+    "Item photo URL", "Condition ID", "Description", "Format",
+]
+
+CONDITIONS = {"NEW", "USED"}
+TITLE_MAX = 80
+STATUSES = {"draft", "approved", "in-csv"}
+
+
+# ── Items ────────────────────────────────────────────────────────────────────
+
+def load_items(items_dir):
+    """All items under items_dir, sorted by id. Each gets a '_dir' key with its folder."""
+    items = []
+    for path in sorted(Path(items_dir).glob("*/item.json")):
+        item = json.loads(path.read_text(encoding="utf-8"))
+        item["_dir"] = path.parent
+        items.append(item)
+    return items
+
+
+def save_item(item):
+    data = {k: v for k, v in item.items() if not k.startswith("_")}
+    path = item["_dir"] / "item.json"
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def spec_value(value):
+    """An item specific as text: lists are joined with ', ', blanks become ''."""
+    if isinstance(value, list):
+        return ", ".join(str(v).strip() for v in value if str(v).strip())
+    return "" if value is None else str(value).strip()
+
+
+def problems(item):
+    """Reasons this item can't go into the CSV yet (empty list = ready)."""
+    found = []
+    if not str(item.get("id", "")).strip():
+        found.append("missing id")
+    if not re.fullmatch(r"\d+", str(item.get("category_id", "")).strip()):
+        found.append("category_id must be a number")
+    title = str(item.get("title", "")).strip()
+    if not title:
+        found.append("missing title")
+    elif len(title) > TITLE_MAX:
+        found.append(f"title is {len(title)} characters (max {TITLE_MAX})")
+    try:
+        if float(item.get("price")) <= 0:
+            found.append("price must be above 0")
+    except (TypeError, ValueError):
+        found.append("missing or invalid price")
+    if item.get("condition") not in CONDITIONS:
+        found.append("condition must be NEW or USED")
+    if not str(item.get("description_html", "")).strip():
+        found.append("missing description")
+    if item.get("status", "draft") not in STATUSES:
+        found.append(f"unknown status {item.get('status')!r}")
+    return found
+
+
+def blank_specifics(item):
+    return [name for name, value in item.get("specifics", {}).items() if not spec_value(value)]
+
+
+# ── CSV ──────────────────────────────────────────────────────────────────────
+
+def csv_rows(items):
+    """The full drafts CSV (info lines, header, one Draft row per item) as lists of cells.
+
+    Item specifics are not written: a test upload on 2026-10-24 showed eBay ignores extra
+    C:<aspect> columns in the drafts template. They go in the description instead.
+    """
+    header = BASE_COLUMNS
+
+    # eBay's template pads the info lines to the full width with empty cells.
+    rows = [line + [""] * (len(header) - len(line)) for line in INFO_LINES] + [header]
+    for item in items:
+        # Uploaded CSV cells are safest on one line; HTML doesn't need the newlines.
+        description = " ".join(str(item["description_html"]).split())
+        row = {
+            ACTION_HEADER: ACTION,
+            "Custom label (SKU)": item["id"],
+            "Category ID": str(item["category_id"]).strip(),
+            "Title": str(item["title"]).strip(),
+            "Price": f"{float(item['price']):.2f}",
+            "Quantity": "1",
+            "Condition ID": item["condition"],
+            "Description": description,
+            "Format": "FixedPrice",
+        }
+        rows.append([row.get(column, "") for column in header])
+
+    # Belt and braces: never write a row that could create a live listing.
+    for cells in rows[len(INFO_LINES) + 1:]:
+        if cells[0] != "Draft":
+            raise RuntimeError(f"refusing to write Action {cells[0]!r}")
+    return rows
+
+
+def write_csv(rows, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        csv.writer(f, lineterminator="\r\n").writerows(rows)
+
+
+def cmd_csv(args):
+    items = [i for i in load_items(args.items) if i.get("status") == "approved"]
+    if not items:
+        print("No approved items. Set \"status\": \"approved\" in item.json first.")
+        return 1
+    bad = {i.get("id", str(i["_dir"])): problems(i) for i in items}
+    bad = {k: v for k, v in bad.items() if v}
+    if bad:
+        for item_id, found in bad.items():
+            print(f"{item_id}: {'; '.join(found)}")
+        print("No CSV written.")
+        return 1
+
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+    path = Path(args.out_dir) / f"drafts-{stamp}.csv"
+    write_csv(csv_rows(items), path)
+    for item in items:
+        item["status"] = "in-csv"
+        item["csv_file"] = path.name
+        save_item(item)
+        note = f" (blank specifics: {', '.join(blank_specifics(item))})" if blank_specifics(item) else ""
+        print(f"  {item['id']}: {item['title']}{note}")
+    print(f"Wrote {len(items)} draft(s) to {path}")
+    return 0
+
+
+# ── Preview ──────────────────────────────────────────────────────────────────
+
+PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>eBay drafts preview</title>
+<style>
+  :root {{ --bg: #f5f5f5; --card: #fff; --text: #191919; --muted: #707070;
+          --line: #e5e5e5; --flag: #fff4cc; --bad: #c62828; --ok: #2e7d32; }}
+  @media (prefers-color-scheme: dark) {{
+    :root {{ --bg: #121212; --card: #1e1e1e; --text: #eee; --muted: #9e9e9e;
+            --line: #333; --flag: #4a3d00; --bad: #ef9a9a; --ok: #a5d6a7; }}
+  }}
+  body {{ margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, sans-serif; }}
+  main {{ max-width: 960px; margin: 0 auto; }}
+  h1 {{ font-size: 20px; }}
+  .item {{ background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+          padding: 16px; margin: 0 0 24px; }}
+  .top {{ display: flex; justify-content: space-between; gap: 12px; color: var(--muted);
+         font-size: 13px; flex-wrap: wrap; }}
+  h2 {{ font-size: 20px; margin: 8px 0 4px; }}
+  .price {{ font-size: 24px; font-weight: 700; }}
+  .photos {{ display: flex; gap: 8px; overflow-x: auto; margin: 12px 0; }}
+  .photos img {{ height: 160px; border-radius: 4px; border: 1px solid var(--line); }}
+  table {{ border-collapse: collapse; width: 100%; margin: 12px 0; }}
+  td {{ border-top: 1px solid var(--line); padding: 4px 8px; vertical-align: top; }}
+  td:first-child {{ color: var(--muted); width: 35%; }}
+  .flag {{ background: var(--flag); }}
+  .problems {{ color: var(--bad); }}
+  .ready {{ color: var(--ok); }}
+  .desc {{ border-top: 1px solid var(--line); padding-top: 8px; }}
+  .note {{ color: var(--muted); font-size: 13px; }}
+</style>
+</head>
+<body>
+<main>
+<h1>eBay drafts preview · {count} item(s)</h1>
+{items}
+</main>
+</body>
+</html>
+"""
+
+
+def esc(value):
+    return html.escape("" if value is None else str(value))
+
+
+def render_item(item, page_dir):
+    found = problems(item)
+    status = item.get("status", "draft")
+    if found:
+        state = f'<p class="problems">Not ready: {esc("; ".join(found))}</p>'
+    else:
+        state = f'<p class="ready">Ready ({esc(status)})</p>'
+
+    photos = []
+    for photo in item.get("photos", []):
+        path = (item["_dir"] / photo).resolve()
+        try:
+            src = path.relative_to(page_dir.resolve()).as_posix()
+        except ValueError:
+            src = path.as_uri()
+        photos.append(f'<img src="{esc(src)}" alt="{esc(Path(photo).name)}" loading="lazy">')
+
+    spec_rows = []
+    for name, value in item.get("specifics", {}).items():
+        shown = spec_value(value)
+        cls = "" if shown else ' class="flag"'
+        spec_rows.append(f"<tr{cls}><td>{esc(name)}</td><td>{esc(shown) or '?'}</td></tr>")
+
+    try:
+        price = f"£{float(item.get('price')):.2f}"
+    except (TypeError, ValueError):
+        price = "£?"
+    notes = "".join(f'<p class="note">{esc(n)}</p>' for n in item.get("notes", []))
+    price_note = item.get("price_note")
+    if price_note:
+        notes = f'<p class="note">Price: {esc(price_note)}</p>' + notes
+
+    return f"""<section class="item">
+  <div class="top"><span>{esc(item.get("id"))} · {len(item.get("photos", []))} photo(s)</span>
+  <span>Category {esc(item.get("category_id"))} · {esc(item.get("category_name"))}</span></div>
+  <h2>{esc(item.get("title"))}</h2>
+  <div class="note">{len(str(item.get("title", "")))}/{TITLE_MAX} characters · Condition: {esc(item.get("condition"))}</div>
+  <div class="price">{price}</div>
+  {state}
+  <div class="photos">{"".join(photos)}</div>
+  <table>{"".join(spec_rows)}</table>
+  <div class="desc">{item.get("description_html", "")}</div>
+  {notes}
+</section>"""
+
+
+def cmd_preview(args):
+    items = load_items(args.items)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    body = "\n".join(render_item(i, out.parent) for i in items) or "<p>No items yet.</p>"
+    out.write_text(PAGE.format(count=len(items), items=body), encoding="utf-8")
+    print(f"Wrote {out} ({len(items)} item(s))")
+    for item in items:
+        found = problems(item)
+        flags = "; ".join(found) if found else "ready"
+        blanks = blank_specifics(item)
+        if blanks:
+            flags += f"; blank specifics: {', '.join(blanks)}"
+        print(f"  {item.get('id')} [{item.get('status', 'draft')}]: {flags}")
+    return 0
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("preview", help="build an HTML preview of all items")
+    p.add_argument("--items", default="items")
+    p.add_argument("--out", default="preview.html")
+    p.set_defaults(func=cmd_preview)
+    p = sub.add_parser("csv", help="write the drafts CSV for approved items")
+    p.add_argument("--items", default="items")
+    p.add_argument("--out-dir", default="out")
+    p.set_defaults(func=cmd_csv)
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

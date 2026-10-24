@@ -17,3 +17,5 @@ install() {
 # grill-me is a thin wrapper that calls the "grilling" skill, so both are needed
 install mattpocock/skills grill-me grilling research wizard git-guardrails-claude-code
 install anthropics/skills claude-api
+
+# ebay-lister is this project's own skill: it's committed in .claude/skills, not installed here

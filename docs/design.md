@@ -33,17 +33,17 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 - Same `#INFO` lines and header row as the template, CRLF line endings, UTF-8.
 - Columns: `Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8)`,
   `Custom label (SKU)`, `Category ID`, `Title`, `UPC`, `Price`, `Quantity`, `Item photo URL`,
-  `Condition ID`, `Description`, `Format`, then one `C:<aspect name>` column per item specific
-  used by any row in the file.
+  `Condition ID`, `Description`, `Format`.
 - `Action` is always `Draft` and the code refuses to write anything else (another value, such as
   `Add`, would create a live listing). `Format` is `FixedPrice`, `Quantity` 1.
 - `Custom label (SKU)` is the item id, so a draft can be matched back to its folder.
 - `Condition ID` is `NEW` or `USED` only. The detailed condition and any defects go in the
   description; I can refine the condition in eBay.
 - `Item photo URL` is left empty: I add the photos on the phone.
-- Item specifics: `C:` columns were tested on 2026-10-24 (`C:Brand`, `C:Colour`) and the upload
-  went through. Names must be eBay's exact aspect names for the category (e.g. `Colour`, not
-  `Color`).
+- Item specifics are **not** in the CSV: a test upload on 2026-10-24 with `C:Brand` and
+  `C:Colour` columns went through, but the draft had no specifics. They go in a "Details" list
+  in the description instead (useful to buyers and to eBay's own suggestions), and the preview
+  shows them so I can copy them into eBay.
 
 ## Listing rules
 
@@ -52,6 +52,7 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
 - Item specifics: the category's usual required and recommended aspects (eBay UK names, e.g.
   `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
+  Written into the description and the preview; I fill eBay's fields when finishing the draft.
 - Title: up to 80 characters, the words a buyer would search for, no filler or caps.
 - Description: clean, simple HTML. Short intro, bullet list of features and condition, defects,
   what's included. No templates, banners or emojis, and no claims the photos don't support.

@@ -1,0 +1,139 @@
+"""Tests for ebay_lister.py. Run: python -m unittest test_ebay_lister.py (from this folder)."""
+
+import csv
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+import ebay_lister
+
+
+def make_item(**overrides):
+    item = {
+        "id": "01-nike-trainers",
+        "status": "approved",
+        "title": "Nike Air Max 90 Trainers UK 9 Blue",
+        "category_id": "15709",
+        "category_name": "Men's Trainers",
+        "condition": "USED",
+        "price": 25,
+        "specifics": {"Brand": "Nike", "Colour": "Blue", "Style": ""},
+        "description_html": "<p>Nike trainers.</p>\n<ul>\n<li>UK 9</li>\n</ul>",
+        "photos": ["photos/IMG_0001.jpg"],
+    }
+    item.update(overrides)
+    return item
+
+
+class ItemsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.items = self.root / "items"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def add(self, item):
+        folder = self.items / item["id"]
+        (folder / "photos").mkdir(parents=True)
+        (folder / "item.json").write_text(json.dumps(item), encoding="utf-8")
+
+    def run_csv(self):
+        return ebay_lister.main(["csv", "--items", str(self.items),
+                                 "--out-dir", str(self.root / "out")])
+
+    def read_csv(self):
+        [path] = (self.root / "out").glob("drafts-*.csv")
+        raw = path.read_bytes()
+        with open(path, newline="", encoding="utf-8") as f:
+            return raw, list(csv.reader(f))
+
+
+class ProblemsTest(unittest.TestCase):
+    def test_valid_item_has_no_problems(self):
+        self.assertEqual(ebay_lister.problems(make_item()), [])
+
+    def test_catches_each_required_field(self):
+        cases = {
+            "category_id": ("Trainers", "category_id"),
+            "title": ("x" * 81, "81 characters"),
+            "price": (0, "price"),
+            "condition": ("Used - like new", "condition"),
+            "description_html": ("  ", "description"),
+        }
+        for field, (value, expected) in cases.items():
+            with self.subTest(field=field):
+                found = ebay_lister.problems(make_item(**{field: value}))
+                self.assertTrue(any(expected in p for p in found), found)
+
+
+class CsvTest(ItemsTestCase):
+    def test_writes_draft_rows_in_template_format(self):
+        self.add(make_item())
+        self.add(make_item(id="02-blender", title="Kenwood Hand Blender", price="12.5",
+                           condition="NEW", specifics={"Brand": "Kenwood", "Model": "HB615"}))
+        self.assertEqual(self.run_csv(), 0)
+        raw, rows = self.read_csv()
+
+        self.assertIn(b"\r\n", raw)
+        self.assertTrue(rows[0][0] == "#INFO" and rows[3][0] == "#INFO")
+        header = rows[4]
+        # eBay ignores C: item specifics columns in the drafts template, so none are added.
+        self.assertEqual(header, ebay_lister.BASE_COLUMNS)
+        self.assertTrue(all(len(r) == len(header) for r in rows))
+
+        first, second = (dict(zip(header, r)) for r in rows[5:])
+        self.assertEqual(first[ebay_lister.ACTION_HEADER], "Draft")
+        self.assertEqual(first["Custom label (SKU)"], "01-nike-trainers")
+        self.assertEqual(first["Price"], "25.00")
+        self.assertEqual(first["Format"], "FixedPrice")
+        self.assertEqual(first["Item photo URL"], "")
+        self.assertNotIn("\n", first["Description"])
+        self.assertEqual(second["Price"], "12.50")
+        self.assertEqual(second["Condition ID"], "NEW")
+
+    def test_only_approved_items_and_marks_them_in_csv(self):
+        self.add(make_item())
+        self.add(make_item(id="02-other", status="draft"))
+        self.run_csv()
+        _, rows = self.read_csv()
+        self.assertEqual(len(rows), 6)
+        saved = json.loads((self.items / "01-nike-trainers" / "item.json").read_text())
+        self.assertEqual(saved["status"], "in-csv")
+        self.assertTrue(saved["csv_file"].startswith("drafts-"))
+        untouched = json.loads((self.items / "02-other" / "item.json").read_text())
+        self.assertEqual(untouched["status"], "draft")
+
+    def test_invalid_item_blocks_the_whole_csv(self):
+        self.add(make_item())
+        self.add(make_item(id="02-bad", category_id=""))
+        self.assertEqual(self.run_csv(), 1)
+        self.assertFalse((self.root / "out").exists())
+
+    def test_refuses_any_action_but_draft(self):
+        original = ebay_lister.ACTION
+        ebay_lister.ACTION = "Add"
+        try:
+            with self.assertRaises(RuntimeError):
+                ebay_lister.csv_rows([make_item()])
+        finally:
+            ebay_lister.ACTION = original
+
+
+class PreviewTest(ItemsTestCase):
+    def test_preview_shows_items_and_flags_blanks(self):
+        self.add(make_item(title="<b>Nike</b>"))
+        out = self.root / "preview.html"
+        self.assertEqual(ebay_lister.main(["preview", "--items", str(self.items),
+                                           "--out", str(out)]), 0)
+        page = out.read_text(encoding="utf-8")
+        self.assertIn("&lt;b&gt;Nike&lt;/b&gt;", page)
+        self.assertIn('src="items/01-nike-trainers/photos/IMG_0001.jpg"', page)
+        self.assertIn('<tr class="flag"><td>Style</td>', page)
+        self.assertIn("£25.00", page)
+
+
+if __name__ == "__main__":
+    unittest.main()
