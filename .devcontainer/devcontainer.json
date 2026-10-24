@@ -1,0 +1,13 @@
+{
+  "name": "eBay Lister",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "node",
+  "postCreateCommand": "bash scripts/setup-skills.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code", "ms-python.python"]
+    }
+  }
+}

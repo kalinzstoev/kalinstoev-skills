@@ -1,0 +1,9 @@
+# Store and check out text files with Linux line endings, so files edited on
+# Windows and inside the container stay identical
+* text=auto eol=lf
+
+# Photos are binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.heic binary
