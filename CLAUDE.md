@@ -18,16 +18,14 @@ update it first if the plan changes.
 - Container config: `Dockerfile`, `docker-compose.yml`, `.devcontainer/`. If you change
   the Dockerfile, tell me to rebuild (`docker compose up -d --build` on the host); you
   can't rebuild from inside.
-- Secrets (eBay App ID / Cert ID) go in the skill's config file in the home folder
-  (`~/.config/ebay-lister/`, see `docs/design.md`), never in the repo. Never commit
-  secrets or print them.
+- Any secrets go in `.env` at the project root (git-ignored, passed into the container).
+  None are needed right now. Never commit secrets or print them.
 
 ## eBay safety
 
 - The tool never writes to my eBay account. Its only output is a drafts CSV that I upload
   myself, and every row's `Action` must be `Draft` (anything else could create a live listing).
-- eBay API use is read-only lookups (categories, aspects, conditions, active comps) with a
-  production application token. No user tokens; no Sandbox (agreed 2026-10-24).
+- No eBay API calls and no eBay keys (agreed 2026-10-24); see `docs/design.md`.
 - Never publish, revise or end a real listing without my explicit go-ahead for that item.
 
 ## Git

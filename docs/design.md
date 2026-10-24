@@ -48,15 +48,15 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 ## Listing rules
 
 - Marketplace: **eBay UK**, GBP, Buy It Now (fixed price).
-- Category: eBay's suggested category for what the item is.
-- Item specifics: the category's required and recommended aspects, filled from the photos,
-  blank (and flagged in the preview) where Claude can't tell. Use eBay's allowed values where
-  the aspect only accepts a fixed list.
+- Category: the eBay UK leaf category ID that fits the item, from Claude's knowledge, checked
+  with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
+- Item specifics: the category's usual required and recommended aspects (eBay UK names, e.g.
+  `Colour`, `UK Shoe Size`), filled from the photos, blank and flagged where Claude can't tell.
 - Title: up to 80 characters, the words a buyer would search for, no filler or caps.
 - Description: clean, simple HTML. Short intro, bullet list of features and condition, defects,
   what's included. No templates, banners or emojis, and no claims the photos don't support.
-- Price: Claude's estimate with a short reason, checked against a few **active** comparable
-  listings where available. I set the final price in the preview or in eBay.
+- Price: Claude's estimate with a short reason, checked with a web search for similar items
+  where useful. I set the final price in the preview or in eBay.
 - Postage, returns, payment and Best Offer are set in eBay when I finish the draft.
 
 ## Technical decisions
@@ -66,23 +66,19 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   `%USERPROFILE%\.claude\skills\`).
   - `SKILL.md`: the workflow above and the listing rules.
   - `ebay_lister.py`: **Python 3, standard library only** (no venv, no packages). Commands:
-    `category`, `aspects`, `comps`, `preview` and `csv`.
+    `preview` (build `preview.html` from the items) and `csv` (validate the approved items and
+    write the drafts CSV).
 - Claude Code itself does the photo work (sorting, reading labels, writing the listing). No
   Anthropic API key.
-- **eBay lookups are read-only**, with a production *application* token (client credentials:
-  App ID and Cert ID only, no access to my account). They use the Taxonomy API for category
-  suggestions and aspects, the Metadata API for conditions, and the Browse API for active
-  comps. Sandbox is not used: it returns placeholder data for these calls, and the drafts
-  upload doesn't exist there.
-- Keys live in a config file in the home folder, not in the repo: `~/.config/ebay-lister/`
-  (Windows: `%APPDATA%\ebay-lister\`). The skill's setup step asks for them.
+- **No eBay API and no keys** (decided 2026-10-24). Nothing to set up. If too many drafts need
+  their category or item specifics fixed by hand, add read-only lookups later with a production
+  application token (Taxonomy, Metadata and Browse APIs; see `docs/ebay-api-research.md`).
 - No database. Each item is `items/<id>/` with `photos/` and `item.json` (listing + status:
-  `draft`, `approved`, `in-csv`). `inbox/`, `items/` and `out/` are in the working folder and git-ignored.
+  `draft`, `approved`, `in-csv`). `inbox/`, `items/` and `out/` are in the working folder and
+  git-ignored.
 
 ## Order of work
 
-1. Developer account approval (in progress), then copy the production App ID and Cert ID into
-   the config. This is the only setup.
-2. Build the skill: `SKILL.md`, `ebay_lister.py` (lookups, preview, CSV), with tests for the
-   CSV writer.
-3. A dry run with 2–3 real items, then upload the first real CSV.
+1. Build the skill: `SKILL.md`, `ebay_lister.py` (preview, CSV), with tests for the CSV writer.
+2. A dry run with 2–3 real items, then upload the first real CSV.
+3. Review how many drafts needed fixing; decide whether eBay lookups are worth adding.
