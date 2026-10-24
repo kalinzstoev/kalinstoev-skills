@@ -18,14 +18,16 @@ update it first if the plan changes.
 - Container config: `Dockerfile`, `docker-compose.yml`, `.devcontainer/`. If you change
   the Dockerfile, tell me to rebuild (`docker compose up -d --build` on the host); you
   can't rebuild from inside.
-- Secrets (eBay keys, Anthropic API key) go in `.env` at the project root. It's
-  git-ignored and passed into the container as environment variables. Never commit
+- Secrets (eBay App ID / Cert ID) go in the skill's config file in the home folder
+  (`~/.config/ebay-lister/`, see `docs/design.md`), never in the repo. Never commit
   secrets or print them.
 
 ## eBay safety
 
-- Develop and test against eBay's **Sandbox** environment with sandbox keys. Only switch
-  to production when I say so.
+- The tool never writes to my eBay account. Its only output is a drafts CSV that I upload
+  myself, and every row's `Action` must be `Draft` (anything else could create a live listing).
+- eBay API use is read-only lookups (categories, aspects, conditions, active comps) with a
+  production application token. No user tokens; no Sandbox (agreed 2026-10-24).
 - Never publish, revise or end a real listing without my explicit go-ahead for that item.
 
 ## Git

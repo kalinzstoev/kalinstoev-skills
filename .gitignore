@@ -5,3 +5,8 @@ __pycache__/
 
 # Personal Claude Code permissions, not shared
 .claude/settings.local.json
+
+# Working folders for the ebay-lister skill (photos and generated drafts)
+inbox/
+items/
+out/
