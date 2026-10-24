@@ -13,11 +13,14 @@ with the container (at `/workspace`), so nothing else on your PC is touched.
 From this folder:
 
 ```
-docker compose build
-docker compose run --rm dev bash
+docker compose up -d --build      # start the container in the background (stays running)
+docker compose exec dev bash      # open a shell inside it; repeat for more terminals
+docker compose stop               # stop it when you're done (start again with "up -d")
 ```
 
-Then inside the container:
+`docker compose ps` shows whether it's running. It also appears under Containers in Docker Desktop.
+
+The first time, inside the container:
 
 ```
 bash scripts/setup-skills.sh   # installs the project's skills into .claude/skills (list in the script)
