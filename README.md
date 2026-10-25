@@ -35,3 +35,7 @@ Your Claude login is kept in the `claude-home` Docker volume, so you only log in
 ## Secrets
 
 Put eBay / API keys in a `.env` file here (it's git-ignored). They are passed into the container.
+
+## Listing items
+
+The eBay lister is a Claude Code skill: put photos in `inbox/` and run `/ebay-lister`. How it works: [.claude/skills/ebay-lister/README.md](.claude/skills/ebay-lister/README.md).

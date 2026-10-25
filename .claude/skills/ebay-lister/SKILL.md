@@ -35,6 +35,11 @@ The script is `ebay_lister.py` in this skill's folder. Run it with `python3` (on
 
 ### 1. Sort the photos into items
 
+- If `inbox/` holds a zip (a Google Photos download), list its contents first, extract only
+  plain image files (no paths, no `..`) into `inbox/`, and move the zip to `out/`. Never
+  delete it.
+- If a photo is blurry or duplicates another, say so and suggest leaving it out of the listing
+  (keep the file in the item folder).
 - List `inbox/` sorted by filename. Phone filenames run in shooting order (`IMG_20261024_…`),
   so one item's photos are usually consecutive.
 - Look at every photo. Group them by the item shown (same object, background, lighting). A
