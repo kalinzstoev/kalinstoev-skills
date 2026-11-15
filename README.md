@@ -41,8 +41,15 @@ the first one; new skills will be added alongside it in `skills/`.
   and category. It doesn't carry photos, condition, item specifics or postage, so you set those
   in the eBay app before publishing (a few minutes per item, from a tick-list the skill writes).
   See [what carries into the draft](skills/ebaylister/README.md#what-carries-into-the-draft).
+- **Your data stays on your computer.** Your photos are read by Claude as part of your
+  conversation, like any file you show it. The plugin itself sends nothing anywhere: its
+  script only reads and writes files in the folder you run it in (`inbox/`, `items/`, `out/`),
+  and those stay there until you delete them.
 - **Tested on eBay UK only.** Other eBay sites can be used by supplying that site's own
   template, but nobody has tried them yet. See [Other eBay sites](#other-ebay-sites).
+- **Built for Claude Code.** It works in the terminal and in the Code tab of the Claude
+  desktop app. It hasn't been tested in Claude chat or Cowork, where it can't use a folder on
+  your computer in the same way.
 
 ## What you need
 
