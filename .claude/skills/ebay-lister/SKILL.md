@@ -1,11 +1,11 @@
 ---
 name: ebay-lister
-description: Turn a folder of item photos into eBay UK draft listings. Sorts photos from inbox/ into items, writes title, category, condition, description and price for each, shows a preview, then writes a Seller Hub "Create drafts" CSV for the user to upload. Use when the user wants to list items on eBay from photos, process the inbox, or make the drafts CSV.
+description: Turn a folder of item photos into eBay draft listings. Sorts photos from inbox/ into items, writes title, category, condition, description and price for each, shows a preview, then writes a Seller Hub "Create drafts" CSV for the user to upload. Use when the user wants to list items on eBay from photos, process the inbox, or make the drafts CSV.
 ---
 
 # eBay lister
 
-The user photographs things to sell, you turn the photos into eBay UK draft listings, and they
+The user photographs things to sell, you turn the photos into eBay draft listings, and they
 upload one CSV in Seller Hub. They add photos, postage and the remaining details in the eBay app
 and publish there.
 
@@ -20,16 +20,34 @@ items/<id>/photos/     photos moved here once sorted (never delete photos)
 items/<id>/item.json   the listing
 preview.html           built by the script
 out/drafts-*.csv       built by the script, uploaded by the user
+ebay-template.csv      optional: eBay's drafts template for a site other than eBay UK
 ```
 
 The script is `ebay_lister.py` in this skill's folder. Run it with `python3` (on Windows,
 `python`) from the working folder:
 
+- `python3 <skill dir>/ebay_lister.py site`: prints the eBay site and currency the CSV will be
+  written for.
 - `python3 <skill dir>/ebay_lister.py preview`: builds `preview.html` from all items and prints
   what is still missing per item.
 - `python3 <skill dir>/ebay_lister.py csv`: checks every `approved` item and writes
   `out/drafts-<date-time>.csv`. It refuses if any approved item has a problem, and marks the
   written items `in-csv`.
+
+## Which eBay site
+
+Run `site` first. Everything below that depends on the marketplace (category IDs, item specific
+names, spelling, currency, the Seller Hub address) follows the site it prints.
+
+- With no `ebay-template.csv` in the working folder the site is **eBay UK** (GBP). This is the
+  only site the tool has been tested on.
+- If the user sells on another eBay site, they need that site's own template: Seller Hub →
+  Reports → Uploads → Get template → Listings → "Create drafts template", saved unchanged as
+  `ebay-template.csv` in the working folder. The script copies its `#INFO` lines and header row,
+  so the CSV matches what that site expects. If `site` shows UK and the user is not a UK seller,
+  stop and ask them to do this before writing any listings.
+- Tell the user once that sites other than UK are untested, and suggest uploading a single
+  draft first to check it arrives as expected.
 
 ## Workflow
 
@@ -59,7 +77,7 @@ The script is `ebay_lister.py` in this skill's folder. Run it with `python3` (on
 ### 2. Write each listing
 
 Look closely at all of an item's photos (labels, model numbers, sizes, tags, wear) and write
-`items/<id>/item.json` (values below are examples):
+`items/<id>/item.json` (values below are examples, for eBay UK):
 
 ```json
 {
@@ -90,8 +108,9 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   no all-caps, no claims the photos don't support. The title matters most: it is one of the
   two fields that reliably carry into the draft, and eBay prefills item specifics from title
   keywords, so get brand, model, size and colour into it where they fit.
-- **category_id:** the eBay **UK** leaf category for the item. Use what you know, and web search
-  when unsure (eBay UK category browse pages show the ID at the end of the URL). Always set
+- **category_id:** the leaf category for the item **on the user's eBay site** (category IDs
+  differ between sites, so a UK ID is wrong on eBay US). Use what you know, and web search when
+  unsure (the site's category browse pages show the ID at the end of the URL). Always set
   `category_name` so the user can see in the preview whether it's right. Note in `notes` if you
   are not sure.
 - **condition:** `NEW` (unused, with tags or in the box) or `USED`. The drafts template only takes
@@ -99,17 +118,19 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   the condition description), so the user picks it in eBay. Put the condition you would choose
   (e.g. "Pre-owned - Good", "New with box") in `notes`, and describe the real condition in the
   description.
-- **price:** your estimate in GBP for a Buy It Now listing that sells within a few weeks. Search
-  the web for similar items when that helps, and give the reason in `price_note`. The user sets
-  the final price.
-- **specifics:** the item specifics a buyer would filter on for this category, with eBay UK
-  names (`Colour`, not `Color`; `UK Shoe Size`). Leave a value `""` when the photos don't show
-  it; the preview highlights it. The CSV can't carry specifics (eBay ignores extra columns);
-  eBay's AI usually fills them, and the filled ones also go in the description's DETAILS.
-- **description_html:** follow the user's template exactly (agreed 2026-10-24). It is plain
-  text laid out in lines; write each line break as `<br>` (a blank line is `<br><br>`), with no
-  other tags, styles, images or emojis. Section headings are in capitals, bullets are typed `•`
-  characters:
+- **price:** your estimate, in the site's currency, for a Buy It Now listing that sells within a
+  few weeks. Search the web for similar items on that site when that helps, and give the reason
+  in `price_note`. The user sets the final price.
+- **specifics:** the item specifics a buyer would filter on for this category, with the names
+  and spelling the user's site uses (on eBay UK: `Colour`, not `Color`; `UK Shoe Size`). Leave a
+  value `""` when the photos don't show it; the preview highlights it. The CSV can't carry
+  specifics (eBay ignores extra columns); eBay's AI usually fills them, and the filled ones also
+  go in the description's DETAILS.
+- **description_html:** follow the template below exactly, unless the user has asked for a
+  different layout. It is plain text laid out in lines; write each line break as `<br>` (a blank
+  line is `<br><br>`), with no other tags, styles, images or emojis (eBay strips most HTML from
+  uploaded drafts). Section headings are in capitals, bullets are typed `•` characters. Write in
+  the language and spelling of the user's site.
 
   ```text
   Rains Backpack – Mint Green
@@ -156,10 +177,9 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 
 ### 3. Preview and revise
 
-- Run `preview`, then tell the user to open `preview.html` in the working folder in a browser
-  (from Windows Explorer when running in the container). Summarise per item what is blank or
-  uncertain, from the script's output and your notes.
-- Apply changes the user asks for ("it's the 2019 model", "drop photo 3", "price it at £20"),
+- Run `preview`, then tell the user to open `preview.html` in the working folder in a browser.
+  Summarise per item what is blank or uncertain, from the script's output and your notes.
+- Apply changes the user asks for ("it's the 2019 model", "drop photo 3", "price it at 20"),
   then rebuild the preview. If they say photos belong to a different item, move them and redo
   both items.
 - When the user approves an item, set its `"status"` to `"approved"`. Only the user approves.
@@ -168,8 +188,8 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 
 - Run `csv`. If it lists problems, fix them (or ask the user) and run it again.
 - Give the user the CSV's path and the upload steps:
-  1. ebay.co.uk → Seller Hub → Reports → Uploads → Upload template, and choose the CSV. Don't
-     open and resave it in Excel first.
+  1. On their eBay site (ebay.co.uk for UK): Seller Hub → Reports → Uploads → Upload template,
+     and choose the CSV. Don't open and resave it in Excel first.
   2. Check the upload result for errors.
   3. Open each draft in Seller Hub or the eBay app. Its Custom label (SKU) is the item id. Then:
      add the photos (from the phone, in the order in `item.json`; eBay asks for at least 5),

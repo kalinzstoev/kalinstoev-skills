@@ -1,5 +1,8 @@
 # eBay Lister: design
 
+This is the author's design record, written in the first person ("I" is the person selling).
+It explains why the tool works the way it does. To use the tool, start with the README.
+
 First agreed in a `/grill-me` session on 2026-10-24, then simplified the same day after the
 eBay research (`docs/ebay-api-research.md`) and a manual draft-upload test. Code follows this;
 change the doc first if the plan changes.
@@ -54,7 +57,7 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 
 ## Listing rules
 
-- Marketplace: **eBay UK**, GBP, Buy It Now (fixed price).
+- Marketplace: **eBay UK**, GBP, Buy It Now (fixed price). Other sites: see "Other eBay sites".
 - Category: the eBay UK leaf category ID that fits the item, from Claude's knowledge, checked
   with a web search when unsure. Shown with its name in the preview so I can catch a wrong one.
   On the first real listing eBay picked the category up correctly, so a best guess is enough.
@@ -69,6 +72,23 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   where useful. I set the final price in the preview or in eBay.
 - Postage, returns, payment and Best Offer are set in eBay when I finish the draft.
 
+## Other eBay sites
+
+Added 2026-11-15, when the project was opened up for others to use.
+
+- eBay UK stays the built-in default and is the only site tested.
+- A seller on another site saves that site's own "Create drafts" template as
+  `ebay-template.csv` in the working folder (or passes `--template`). The script copies the
+  template's `#INFO` lines and header row, fills the columns it knows by name and leaves the
+  rest empty. Site, country and currency are read from the `Action(SiteID=…|Country=…|
+  Currency=…)` header.
+- Reading eBay's own file was chosen over a table of sites in the code: the header values for
+  other sites could not be confirmed from eBay's documentation, and a guessed header could be
+  rejected or, worse, misread.
+- A template without the columns the tool fills is refused. `Action` is still always `Draft`.
+- Category IDs and item specific names differ per site, so `SKILL.md` has Claude run
+  `ebay_lister.py site` first and work for that site.
+
 ## Technical decisions
 
 - A **Claude Code skill**, `.claude/skills/ebay-lister/`, committed in this repo. It also works
@@ -76,8 +96,8 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
   `%USERPROFILE%\.claude\skills\`).
   - `SKILL.md`: the workflow above and the listing rules.
   - `ebay_lister.py`: **Python 3, standard library only** (no venv, no packages). Commands:
-    `preview` (build `preview.html` from the items) and `csv` (validate the approved items and
-    write the drafts CSV).
+    `preview` (build `preview.html` from the items), `csv` (validate the approved items and
+    write the drafts CSV) and `site` (show which eBay site the CSV is written for).
 - Claude Code itself does the photo work (sorting, reading labels, writing the listing). No
   Anthropic API key.
 - **No eBay API and no keys** (decided 2026-10-24). Nothing to set up. If too many drafts need

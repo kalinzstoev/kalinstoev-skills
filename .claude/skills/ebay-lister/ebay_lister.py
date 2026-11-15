@@ -5,6 +5,10 @@ Standard library only, so it runs anywhere Python 3 does (container or Windows).
 
     python ebay_lister.py preview [--items items] [--out preview.html]
     python ebay_lister.py csv     [--items items] [--out-dir out]
+    python ebay_lister.py site
+
+The CSV is written for eBay UK unless eBay's "Create drafts" template for another site is
+saved as ebay-template.csv in the working folder (or passed with --template).
 
 Each item lives in items/<id>/item.json next to a photos/ folder. See SKILL.md for the
 item.json fields.
@@ -23,8 +27,9 @@ from pathlib import Path
 # live listing when the CSV is uploaded.
 ACTION = "Draft"
 
-# Copied from eBay's UK "Create drafts" template (Version=0.0.2), Seller Hub → Reports.
-INFO_LINES = [
+# The built-in template, copied from eBay's UK "Create drafts" template (Version=0.0.2),
+# Seller Hub → Reports. Other sites are read from the seller's own copy (load_template).
+UK_INFO_LINES = [
     ["#INFO", "Version=0.0.2", "Template= eBay-draft-listings-template_GB"],
     ["#INFO Action and Category ID are required fields. 1) Set Action to Draft 2) Please find "
      "the category ID for your listings here: "
@@ -33,11 +38,20 @@ INFO_LINES = [
      "complete your drafts to active listings here: https://www.ebay.co.uk/sh/lst/drafts"],
     ["#INFO"],
 ]
-ACTION_HEADER = "Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8)"
-BASE_COLUMNS = [
-    ACTION_HEADER, "Custom label (SKU)", "Category ID", "Title", "UPC", "Price", "Quantity",
+UK_COLUMNS = [
+    "Action(SiteID=UK|Country=GB|Currency=GBP|Version=1193|CC=UTF-8)",
+    "Custom label (SKU)", "Category ID", "Title", "UPC", "Price", "Quantity",
     "Item photo URL", "Condition ID", "Description", "Format",
 ]
+
+# A template for another eBay site is picked up from this file in the working folder.
+TEMPLATE_FILE = "ebay-template.csv"
+# Columns this tool fills in; a template without them can't be used.
+REQUIRED_COLUMNS = [
+    "Custom label (SKU)", "Category ID", "Title", "Price", "Quantity", "Condition ID",
+    "Description", "Format",
+]
+CURRENCY_SYMBOLS = {"GBP": "£", "USD": "$", "EUR": "€", "AUD": "A$", "CAD": "C$"}
 
 CONDITIONS = {"NEW", "USED"}
 TITLE_MAX = 80
@@ -99,23 +113,75 @@ def blank_specifics(item):
     return [name for name, value in item.get("specifics", {}).items() if not spec_value(value)]
 
 
+# ── Template ─────────────────────────────────────────────────────────────────
+
+def load_template(path=None):
+    """The drafts template to write: its #INFO lines, header columns and where it came from.
+
+    Uses `path`, else ebay-template.csv in the working folder, else the built-in UK template.
+    The file is eBay's own "Create drafts" template for the seller's site, as downloaded.
+    """
+    if path is None and Path(TEMPLATE_FILE).exists():
+        path = TEMPLATE_FILE
+    if path is None:
+        return {"info_lines": UK_INFO_LINES, "columns": UK_COLUMNS, "source": "built-in"}
+
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        rows = [[cell.strip() for cell in row] for row in csv.reader(f)]
+    info_lines, columns = [], None
+    for row in rows:
+        while row and not row[-1]:
+            row.pop()
+        if row and row[0].startswith("#INFO"):
+            info_lines.append(row)
+        elif row and row[0].startswith("Action(") and row[0].endswith(")"):
+            columns = row
+            break
+    if columns is None:
+        raise ValueError(f"{path}: no header row starting with 'Action(' found. Is this "
+                         "eBay's \"Create drafts\" template?")
+    missing = [c for c in REQUIRED_COLUMNS if c not in columns]
+    if missing:
+        raise ValueError(f"{path}: the template has no column(s): {', '.join(missing)}")
+    return {"info_lines": info_lines, "columns": columns, "source": str(path)}
+
+
+def site_info(template):
+    """SiteID, Country, Currency… from the template's Action header, plus a currency symbol."""
+    parts = template["columns"][0][len("Action("):-1].split("|")
+    info = dict(part.split("=", 1) for part in parts if "=" in part)
+    currency = info.get("Currency", "")
+    info["symbol"] = CURRENCY_SYMBOLS.get(currency, f"{currency} ".lstrip())
+    return info
+
+
+def cmd_site(args):
+    template = load_template(args.template)
+    info = site_info(template)
+    print(f"Site: {info.get('SiteID', '?')}, country: {info.get('Country', '?')}, "
+          f"currency: {info.get('Currency', '?')}, template: {template['source']}")
+    return 0
+
+
 # ── CSV ──────────────────────────────────────────────────────────────────────
 
-def csv_rows(items):
+def csv_rows(items, template=None):
     """The full drafts CSV (info lines, header, one Draft row per item) as lists of cells.
 
     Item specifics are not written: a test upload on 2026-10-24 showed eBay ignores extra
     C:<aspect> columns in the drafts template. They go in the description instead.
     """
-    header = BASE_COLUMNS
+    template = template or load_template()
+    header = template["columns"]
+    info_lines = template["info_lines"]
 
     # eBay's template pads the info lines to the full width with empty cells.
-    rows = [line + [""] * (len(header) - len(line)) for line in INFO_LINES] + [header]
+    rows = [line + [""] * (len(header) - len(line)) for line in info_lines] + [header]
     for item in items:
         # Uploaded CSV cells are safest on one line; HTML doesn't need the newlines.
         description = " ".join(str(item["description_html"]).split())
         row = {
-            ACTION_HEADER: ACTION,
+            header[0]: ACTION,
             "Custom label (SKU)": item["id"],
             "Category ID": str(item["category_id"]).strip(),
             "Title": str(item["title"]).strip(),
@@ -128,7 +194,7 @@ def csv_rows(items):
         rows.append([row.get(column, "") for column in header])
 
     # Belt and braces: never write a row that could create a live listing.
-    for cells in rows[len(INFO_LINES) + 1:]:
+    for cells in rows[len(info_lines) + 1:]:
         if cells[0] != "Draft":
             raise RuntimeError(f"refusing to write Action {cells[0]!r}")
     return rows
@@ -141,6 +207,7 @@ def write_csv(rows, path):
 
 
 def cmd_csv(args):
+    template = load_template(args.template)
     items = [i for i in load_items(args.items) if i.get("status") == "approved"]
     if not items:
         print("No approved items. Set \"status\": \"approved\" in item.json first.")
@@ -155,14 +222,14 @@ def cmd_csv(args):
 
     stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
     path = Path(args.out_dir) / f"drafts-{stamp}.csv"
-    write_csv(csv_rows(items), path)
+    write_csv(csv_rows(items, template), path)
     for item in items:
         item["status"] = "in-csv"
         item["csv_file"] = path.name
         save_item(item)
         note = f" (blank specifics: {', '.join(blank_specifics(item))})" if blank_specifics(item) else ""
         print(f"  {item['id']}: {item['title']}{note}")
-    print(f"Wrote {len(items)} draft(s) to {path}")
+    print(f"Wrote {len(items)} draft(s) for eBay {site_info(template).get('SiteID', '?')} to {path}")
     return 0
 
 
@@ -217,7 +284,7 @@ def esc(value):
     return html.escape("" if value is None else str(value))
 
 
-def render_item(item, page_dir):
+def render_item(item, page_dir, symbol="£"):
     found = problems(item)
     status = item.get("status", "draft")
     if found:
@@ -241,9 +308,9 @@ def render_item(item, page_dir):
         spec_rows.append(f"<tr{cls}><td>{esc(name)}</td><td>{esc(shown) or '?'}</td></tr>")
 
     try:
-        price = f"£{float(item.get('price')):.2f}"
+        price = f"{symbol}{float(item.get('price')):.2f}"
     except (TypeError, ValueError):
-        price = "£?"
+        price = f"{symbol}?"
     notes = "".join(f'<p class="note">{esc(n)}</p>' for n in item.get("notes", []))
     price_note = item.get("price_note")
     if price_note:
@@ -264,10 +331,11 @@ def render_item(item, page_dir):
 
 
 def cmd_preview(args):
+    symbol = site_info(load_template(args.template))["symbol"]
     items = load_items(args.items)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    body = "\n".join(render_item(i, out.parent) for i in items) or "<p>No items yet.</p>"
+    body = "\n".join(render_item(i, out.parent, symbol) for i in items) or "<p>No items yet.</p>"
     out.write_text(PAGE.format(count=len(items), items=body), encoding="utf-8")
     print(f"Wrote {out} ({len(items)} item(s))")
     for item in items:
@@ -293,8 +361,17 @@ def main(argv=None):
     p.add_argument("--items", default="items")
     p.add_argument("--out-dir", default="out")
     p.set_defaults(func=cmd_csv)
+    p = sub.add_parser("site", help="show which eBay site and currency the CSV is written for")
+    p.set_defaults(func=cmd_site)
+    for p in sub.choices.values():
+        p.add_argument("--template", help="eBay's \"Create drafts\" template for your site "
+                       f"(default: {TEMPLATE_FILE} in the working folder, else eBay UK)")
     args = parser.parse_args(argv)
-    return args.func(args)
+    try:
+        return args.func(args)
+    except ValueError as error:
+        print(error)
+        return 1
 
 
 if __name__ == "__main__":

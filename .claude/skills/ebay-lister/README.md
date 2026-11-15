@@ -1,6 +1,7 @@
 # eBay lister
 
-Turns phone photos of things to sell into eBay UK **draft** listings. Claude Code does the
+Turns phone photos of things to sell into eBay **draft** listings (eBay UK by default; see
+[Other eBay sites](#other-ebay-sites)). Claude Code does the
 looking and writing; a small script builds a preview and the drafts CSV; you upload the CSV
 and finish each draft in the eBay app. Nothing here touches your eBay account.
 
@@ -20,9 +21,9 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 7. **Preview.** `preview.html` shows every item. Ask for changes in chat; Claude edits and
    rebuilds it.
 8. **Approve.** Say "approve" and the item is marked approved.
-9. **CSV.** Claude writes `out/drafts-<date-time>.csv` for the approved items, in eBay's UK
+9. **CSV.** Claude writes `out/drafts-<date-time>.csv` for the approved items, in eBay's
    "Create drafts" format. Every row is `Action=Draft`; the script refuses anything else.
-10. **Upload.** ebay.co.uk → Seller Hub → Reports → Uploads → Upload template → choose the CSV
+10. **Upload.** Your eBay site (ebay.co.uk) → Seller Hub → Reports → Uploads → Upload template → choose the CSV
     (don't open it in Excel first).
 11. **Finish on the phone.** Open each draft (its Custom label is the item id) and:
     add the photos in the order from the preview (eBay wants at least 5), pick the condition
@@ -42,9 +43,26 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 
 That's why the title carries brand, model, size and colour: eBay reads specifics from it.
 
+This is what a test draft and the first real listings showed on eBay UK in October 2026. eBay
+may change it.
+
+## Other eBay sites
+
+With nothing else set up, the CSV is written for eBay UK in pounds. For another site, download
+that site's own template (Seller Hub → Reports → Uploads → Get template → Listings → "Create
+drafts template") and save it, unchanged, as `ebay-template.csv` in the working folder. The
+script copies its `#INFO` lines and header row into every CSV it writes and takes the currency
+from it. Claude then uses that site's category IDs and item specific names.
+
+`python3 ebay_lister.py site` prints the site, country and currency in use. `--template <file>`
+on any command points at a template somewhere else.
+
+Only eBay UK has been tested. On another site, upload one draft first and check it.
+
 ## Description template
 
-Plain text with line breaks (written as `<br>` in the CSV, no other HTML):
+Plain text with line breaks (written as `<br>` in the CSV, no other HTML, because eBay strips
+most HTML from uploaded drafts). To change the layout, edit the template in `SKILL.md`.
 
 ```text
 Rains Backpack – Mint Green
@@ -76,6 +94,7 @@ items/<id>/photos/      an item's photos
 items/<id>/item.json    the listing (status: draft → approved → in-csv)
 preview.html            the preview page
 out/drafts-*.csv        CSVs to upload (and kept zips)
+ebay-template.csv       optional: your eBay site's drafts template (not needed for UK)
 ```
 
 All of these are in the working folder and git-ignored.
@@ -84,6 +103,7 @@ All of these are in the working folder and git-ignored.
 
 `ebay_lister.py` is Python 3, standard library only:
 
+- `python3 ebay_lister.py site` prints the eBay site and currency the CSV is written for.
 - `python3 ebay_lister.py preview` builds `preview.html` and lists what's missing per item.
 - `python3 ebay_lister.py csv` checks every approved item and writes the drafts CSV, then
   marks those items `in-csv` so they aren't sent twice. To redo one, set its status back to
@@ -98,4 +118,4 @@ Copy this folder to `~/.claude/skills/ebay-lister` (Windows:
 `inbox/`. On Windows use `python` instead of `python3`.
 
 The workflow Claude follows is in `SKILL.md`; the design and the reasons behind it are in
-`docs/design.md` in this repo.
+`docs/design.md` in the project repo.

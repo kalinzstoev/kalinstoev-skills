@@ -81,11 +81,11 @@ class CsvTest(ItemsTestCase):
         self.assertTrue(rows[0][0] == "#INFO" and rows[3][0] == "#INFO")
         header = rows[4]
         # eBay ignores C: item specifics columns in the drafts template, so none are added.
-        self.assertEqual(header, ebay_lister.BASE_COLUMNS)
+        self.assertEqual(header, ebay_lister.UK_COLUMNS)
         self.assertTrue(all(len(r) == len(header) for r in rows))
 
         first, second = (dict(zip(header, r)) for r in rows[5:])
-        self.assertEqual(first[ebay_lister.ACTION_HEADER], "Draft")
+        self.assertEqual(first[header[0]], "Draft")
         self.assertEqual(first["Custom label (SKU)"], "01-nike-trainers")
         self.assertEqual(first["Price"], "25.00")
         self.assertEqual(first["Format"], "FixedPrice")
@@ -120,6 +120,50 @@ class CsvTest(ItemsTestCase):
                 ebay_lister.csv_rows([make_item()])
         finally:
             ebay_lister.ACTION = original
+
+
+US_TEMPLATE = (
+    "#INFO,Version=0.0.2,Template= eBay-draft-listings-template_US,,,,,,,,\r\n"
+    "#INFO,,,,,,,,,,\r\n"
+    "Action(SiteID=US|Country=US|Currency=USD|Version=1193|CC=UTF-8),Custom label (SKU),"
+    "Category ID,Title,UPC,Price,Quantity,Item photo URL,Condition ID,Description,Format\r\n"
+    "Draft,,47140,Sample row that must not be copied,,11,1,,NEW,Sample,FixedPrice\r\n"
+)
+
+
+class TemplateTest(ItemsTestCase):
+    def write_template(self, text):
+        path = self.root / "template.csv"
+        path.write_text(text, encoding="utf-8", newline="")
+        return str(path)
+
+    def test_csv_and_preview_follow_another_sites_template(self):
+        template = self.write_template(US_TEMPLATE)
+        self.add(make_item())
+        out = self.root / "preview.html"
+        ebay_lister.main(["preview", "--items", str(self.items), "--out", str(out),
+                          "--template", template])
+        self.assertIn("$25.00", out.read_text(encoding="utf-8"))
+
+        self.assertEqual(ebay_lister.main(["csv", "--items", str(self.items), "--out-dir",
+                                           str(self.root / "out"), "--template", template]), 0)
+        _, rows = self.read_csv()
+        self.assertEqual(rows[0][2], "Template= eBay-draft-listings-template_US")
+        self.assertTrue(rows[2][0].startswith("Action(SiteID=US|"))
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(rows[3][0], "Draft")
+        self.assertEqual(rows[3][1], "01-nike-trainers")
+
+    def test_rejects_a_file_that_is_not_the_drafts_template(self):
+        self.add(make_item())
+        for text in ("Title,Price\r\nShoe,5\r\n",
+                     "Action(SiteID=US|Country=US|Currency=USD),Title,Price\r\n"):
+            with self.subTest(text=text):
+                code = ebay_lister.main(["csv", "--items", str(self.items), "--out-dir",
+                                         str(self.root / "out"),
+                                         "--template", self.write_template(text)])
+                self.assertEqual(code, 1)
+                self.assertFalse((self.root / "out").exists())
 
 
 class PreviewTest(ItemsTestCase):
