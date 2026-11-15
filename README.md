@@ -5,11 +5,12 @@
 A [Claude Code](https://claude.com/claude-code) skill that turns phone photos of things you
 want to sell into eBay **draft** listings.
 
-<img src="docs/preview.jpg" alt="The preview page: a backpack listing with its photos, title, price, item specifics with one gap highlighted, and a description listing features and condition" width="640">
+<img src="docs/preview.jpg" alt="The preview page: a brown crossbody bag listing with three photos, title, price, item specifics with brand and material highlighted as unknown, and a description listing features and condition" width="640">
 
 *The preview page for a real item. Everything in it was read from three phone photos: the
-swivel clip, the press studs under the flap, the small chip on the clip. The highlighted row
-is something the photos didn't show, so it was left blank and not guessed.*
+push-lock clasp, the two compartments seen from the side, the zip pocket on the back, and the
+scuffs on the back panel. The highlighted rows, brand and material, are things the photos
+don't show, so they were left blank and asked about, not guessed.*
 
 You take photos and drop them in a folder. Claude looks at them, works out which photos belong
 to which item, and reads what is actually there: the brand on a label, the material, the
