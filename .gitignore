@@ -3,8 +3,8 @@ node_modules/
 __pycache__/
 .venv/
 
-# Personal Claude Code permissions, not shared
-.claude/settings.local.json
+# Your own Claude Code settings for working on this repo
+.claude/
 
 # Working folders for the ebaylister skill (photos and generated drafts)
 inbox/
@@ -12,6 +12,3 @@ items/
 out/
 preview.html
 ebay-template.csv
-
-# Third-party skills installed by scripts/setup-skills.sh (ebaylister lives in skills/)
-.claude/skills/

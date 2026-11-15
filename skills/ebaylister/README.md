@@ -125,5 +125,4 @@ Copy this folder to `~/.claude/skills/ebaylister` (Windows:
 `%USERPROFILE%\.claude\skills\ebaylister`) and run `/ebaylister` from any folder that has an
 `inbox/`. On Windows use `python` instead of `python3`.
 
-The workflow Claude follows is in `SKILL.md`; the design and the reasons behind it are in
-`docs/design.md` in the project repo.
+The workflow Claude follows is in `SKILL.md`.
