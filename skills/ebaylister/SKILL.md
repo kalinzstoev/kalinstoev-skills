@@ -1,6 +1,6 @@
 ---
 name: ebaylister
-description: Turn a folder of item photos into eBay draft listings. Sorts photos from inbox/ into items, writes title, category, condition, description and price for each, shows a preview, then writes a Seller Hub "Create drafts" CSV for the user to upload. Use when the user wants to list items on eBay from photos, process the inbox, or make the drafts CSV.
+description: Takes a batch of photos of one or more things to sell, groups them by item, writes a draft listing for each and makes a CSV that creates the drafts in eBay for review. No coding or API keys needed. Use when the user wants to list items on eBay from photos.
 ---
 
 # eBay lister

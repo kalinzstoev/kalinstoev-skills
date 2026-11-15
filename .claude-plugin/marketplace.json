@@ -10,7 +10,7 @@
     {
       "name": "kalinstoev-skills",
       "source": "./",
-      "description": "Kalin Stoev's Claude Code skills. ebaylister: turn phone photos of things you want to sell into eBay draft listings"
+      "description": "Kalin Stoev's Claude Code skills. ebaylister turns photos of things to sell into eBay draft listings: it groups the photos by item, writes each listing and makes a CSV that creates the drafts in eBay. No coding or API keys needed."
     }
   ]
 }

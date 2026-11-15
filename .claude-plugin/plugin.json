@@ -1,7 +1,7 @@
 {
   "name": "kalinstoev-skills",
-  "version": "1.0.0",
-  "description": "Kalin Stoev's Claude Code skills. ebaylister: turn phone photos of things you want to sell into eBay draft listings. Claude reads the photos and writes the title, features, condition and price; you upload one CSV of drafts and publish in eBay.",
+  "version": "1.0.1",
+  "description": "Kalin Stoev's Claude Code skills. ebaylister turns photos of things to sell into eBay draft listings: it groups the photos by item, writes each listing and makes a CSV that creates the drafts in eBay. No coding or API keys needed.",
   "author": {
     "name": "Kalin Stoev",
     "url": "https://github.com/kalinzstoev"
