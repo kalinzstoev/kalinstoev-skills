@@ -92,3 +92,7 @@ Based on eBay's UK template (`resource/eBay-draft-listing-template-*.csv`, versi
 1. Build the skill: `SKILL.md`, `ebay_lister.py` (preview, CSV), with tests for the CSV writer.
 2. A dry run with 2–3 real items, then upload the first real CSV.
 3. Review how many drafts needed fixing; decide whether eBay lookups are worth adding.
+
+**Outcome (2026-11-15):** all 9 items listed. The skill worked well; the remaining manual
+work was in eBay itself after the draft went live (photos, condition, specifics), which the
+CSV can't carry. No eBay lookups needed. The tool is done.
