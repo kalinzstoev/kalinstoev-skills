@@ -7,7 +7,8 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 
 ## How a batch works
 
-1. **Run `/ebay-lister`** in Claude Code. The first time, Claude checks Python is installed,
+1. **Run `/ebay-lister:ebay-lister`** in Claude Code (`/ebay-lister` if you installed it as a
+   plain skill), or just ask Claude to help you list things on eBay. The first time, Claude checks Python is installed,
    creates `inbox/` in the working folder and tells you where it is.
 2. **Photos in.** Copy the photos (or the Google Photos download zip) into `inbox/` and tell
    Claude.

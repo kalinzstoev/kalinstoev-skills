@@ -13,6 +13,5 @@ out/
 preview.html
 ebay-template.csv
 
-# Third-party skills installed by scripts/setup-skills.sh (only ebay-lister is committed)
-.claude/skills/*
-!.claude/skills/ebay-lister/
+# Third-party skills installed by scripts/setup-skills.sh (ebay-lister lives in skills/)
+.claude/skills/

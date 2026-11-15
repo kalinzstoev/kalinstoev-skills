@@ -1,0 +1,16 @@
+{
+  "name": "kalinzstoev",
+  "owner": {
+    "name": "Kalin Stoev"
+  },
+  "metadata": {
+    "description": "eBay Lister: turn photos of things to sell into eBay draft listings"
+  },
+  "plugins": [
+    {
+      "name": "ebay-lister",
+      "source": "./",
+      "description": "Turn phone photos of things you want to sell into eBay draft listings"
+    }
+  ]
+}

@@ -19,4 +19,4 @@ install() {
 install mattpocock/skills grill-me grilling research wizard git-guardrails-claude-code
 install anthropics/skills claude-api
 
-# ebay-lister is this project's own skill: it's committed in .claude/skills, not installed here
+# ebay-lister is this project's own skill: it's committed in skills/, not installed here

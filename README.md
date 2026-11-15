@@ -3,16 +3,23 @@
 A [Claude Code](https://claude.com/claude-code) skill that turns phone photos of things you
 want to sell into eBay **draft** listings.
 
-You take photos and drop them in a folder. Claude sorts them into items and writes a title,
-category, condition, price and description for each one. You check a preview page, then upload
-one CSV file in eBay's Seller Hub. The drafts appear in your eBay account, where you add the
-photos and publish.
+You take photos and drop them in a folder. Claude looks at them, works out which photos belong
+to which item, and reads what is actually there: the brand on a label, the material, the
+pockets and fastenings, the scuff on a corner. From that it writes a title, a feature list, an
+honest condition report and a price for each item. You check a preview page, then upload one
+CSV file in eBay's Seller Hub. The drafts appear in your eBay account, where you add the photos
+and publish.
+
+eBay's own tools already suggest a category and item specifics. What they don't do is look at
+your photos and describe the item for you. That is the part this skill does.
 
 It is meant for clearing out a cupboard, not running a shop: a dozen items at a time, no
 database, no accounts to set up.
 
 ## What it does and doesn't do
 
+- **It only states what the photos show.** No "genuine", "works perfectly" or "waterproof"
+  unless a label or a photo shows it, or you say so. Anything it can't tell, it asks you.
 - **It never touches your eBay account.** There are no eBay API calls, keys or logins. The only
   output is a CSV that you upload yourself, and every row in it is a draft. The script refuses
   to write anything else.
@@ -20,8 +27,8 @@ database, no accounts to set up.
   subscription you already use it with.
 - **You finish each draft in eBay.** eBay's draft upload carries the title, description, price
   and category. It doesn't carry photos, condition, item specifics or postage, so you set those
-  in the eBay app before publishing (a few minutes per item). See
-  [what carries into the draft](.claude/skills/ebay-lister/README.md#what-carries-into-the-draft).
+  in the eBay app before publishing (a few minutes per item, from a tick-list the skill writes).
+  See [what carries into the draft](skills/ebay-lister/README.md#what-carries-into-the-draft).
 - **Tested on eBay UK only.** Other eBay sites can be used by supplying that site's own
   template, but nobody has tried them yet. See [Other eBay sites](#other-ebay-sites).
 
@@ -33,57 +40,58 @@ database, no accounts to set up.
   "Add python.exe to PATH" in the installer.)
 - An eBay seller account with Seller Hub.
 
-## Quick start
+## Install
 
-1. **Get the project.** On the GitHub page choose Code → Download ZIP and unzip it somewhere
-   you'll find again. Or, if you use git:
+In a Claude Code session, run:
 
-   ```bash
-   git clone https://github.com/kalinzstoev/ebay-lister.git
+```
+/plugin install ebay-lister --marketplace kalinzstoev/ebay-lister
+```
+
+On an older Claude Code, where that isn't recognised, use the two-step form:
+
+```
+/plugin marketplace add kalinzstoev/ebay-lister
+/plugin install ebay-lister@kalinzstoev
+```
+
+Choose "Install for you" when asked. The skill is then available in every folder.
+
+Other ways to install are [listed below](#other-ways-to-install).
+
+## Use
+
+1. **Make a folder for your selling** (anywhere, for example `Documents/ebay`), open it in
+   Claude Code, and type:
+
+   ```
+   /ebay-lister:ebay-lister
    ```
 
-2. **Open that folder in Claude Code and type:**
+   or just say "help me list some things on eBay". Claude creates a photos folder (`inbox`)
+   and tells you where it is.
 
-   ```
-   /ebay-lister
-   ```
-
-   Claude creates a photos folder (`inbox`) and tells you where it is.
-
-3. **Copy your photos into it** and tell Claude. A zip downloaded from Google Photos works
+2. **Copy your photos into it** and tell Claude. A zip downloaded from Google Photos works
    too. Take several photos of each item, one item after another, including any labels and
    any damage.
 
-4. **Check Claude's work.** It shows which photos it thinks belong to which item, asks what
-   the photos can't tell it (size, does it work), then opens a preview page in your browser.
+3. **Check Claude's work.** It shows which photos it thinks belong to which item, then opens
+   a preview page in your browser and asks what the photos can't tell it (size, does it work).
    Ask for changes in plain words: "it's a size 10", "drop the blurry photo", "price it at 20".
 
-5. **Say which items you approve.** Claude writes the file to upload and a tick-list of what
+4. **Say which items you approve.** Claude writes the file to upload and a tick-list of what
    is left to do, and tells you where both are.
 
-6. **Upload it to eBay:** Seller Hub → Reports → Uploads → Upload template. Don't open the
+5. **Upload it to eBay:** Seller Hub → Reports → Uploads → Upload template. Don't open the
    file in Excel first.
 
-7. **Finish each draft in the eBay app,** following the tick-list: add the photos, pick the
+6. **Finish each draft in the eBay app,** following the tick-list: add the photos, pick the
    condition, check what eBay suggests, publish.
 
-You never type a command or edit a file yourself. The full walkthrough, with the description layout and what each file is for, is in the
-[skill's README](.claude/skills/ebay-lister/README.md).
+You never type a command or edit a file yourself. The full walkthrough, with the description
+layout and what each file is for, is in the [skill's README](skills/ebay-lister/README.md).
 
-Your photos, listings and CSVs stay in `inbox/`, `items/` and `out/`. These are git-ignored,
-so they are never committed.
-
-### Using it from any folder
-
-To have `/ebay-lister` available everywhere, not only in this project, copy the skill folder
-into your personal skills:
-
-```bash
-cp -r .claude/skills/ebay-lister ~/.claude/skills/
-```
-
-On Windows the destination is `%USERPROFILE%\.claude\skills\`. Then run `/ebay-lister` from
-any folder that has an `inbox` folder with photos in it.
+Your photos, listings and CSVs stay in the folder you started in (`inbox/`, `items/`, `out/`).
 
 ## Other eBay sites
 
@@ -93,15 +101,9 @@ Out of the box the CSV is written for eBay UK, in pounds. To use another eBay si
    "Create drafts template" and download it.
 2. Save it, unchanged, as `ebay-template.csv` in the folder you run Claude Code in.
 
-The script then copies the header lines from your template, so the CSV matches what your site
+The skill then copies the header lines from your template, so the CSV matches what your site
 expects, and the preview shows your currency. Claude picks categories and item specific names
-for that site. You can check what it picked up with:
-
-```bash
-python3 .claude/skills/ebay-lister/ebay_lister.py site
-```
-
-(Use `python` instead of `python3` on Windows.)
+for that site.
 
 This path is untested outside the UK. Upload a single draft first and check it arrives as you
 expect. If it works, or doesn't, for your site, please open an issue so this section can say so.
@@ -109,14 +111,38 @@ expect. If it works, or doesn't, for your site, please open an issue so this sec
 ## Changing how listings are written
 
 The rules Claude follows are plain text in
-[`.claude/skills/ebay-lister/SKILL.md`](.claude/skills/ebay-lister/SKILL.md): how titles are
-built, the description layout, how prices are estimated. Edit that file to change them, or
-just tell Claude what you want differently during a run.
+[`skills/ebay-lister/SKILL.md`](skills/ebay-lister/SKILL.md): how titles are built, the
+description layout, how prices are estimated. Edit that file to change them, or just tell
+Claude what you want differently during a run.
+
+## Other ways to install
+
+- **From your shell,** without opening a session:
+
+  ```bash
+  claude plugin marketplace add kalinzstoev/ebay-lister
+  ```
+
+  ```bash
+  claude plugin install ebay-lister@kalinzstoev
+  ```
+
+- **As a plain skill,** with the [skills CLI](https://github.com/vercel-labs/skills) (needs
+  Node). The skill is then called `/ebay-lister`:
+
+  ```bash
+  npx skills add kalinzstoev/ebay-lister
+  ```
+
+- **By hand:** download this repository (Code → Download ZIP) and copy the
+  `skills/ebay-lister` folder into `~/.claude/skills/` (on Windows,
+  `%USERPROFILE%\.claude\skills\`). The skill is then called `/ebay-lister`.
 
 ## Project layout
 
 ```
-.claude/skills/ebay-lister/   the skill: SKILL.md, ebay_lister.py, tests, README
+skills/ebay-lister/           the skill: SKILL.md, ebay_lister.py, tests, README
+.claude-plugin/               plugin and marketplace manifests, for /plugin install
 docs/design.md                why it works the way it does
 docs/ebay-api-research.md     research into eBay's APIs and the drafts upload
 docs/dev-container.md         optional Docker setup for working on the project
@@ -125,14 +151,23 @@ resource/                     eBay's UK drafts template, as downloaded
 
 ## Working on it
 
+Load your checkout as a plugin for one session:
+
+```bash
+claude --plugin-dir .
+```
+
 Run the tests from the skill folder:
 
 ```bash
-cd .claude/skills/ebay-lister && python3 -m unittest test_ebay_lister.py
+cd skills/ebay-lister && python3 -m unittest test_ebay_lister.py
 ```
 
+(Use `python` instead of `python3` on Windows.)
+
 The repo includes a Claude Code hook (`.claude/hooks/block-dangerous-git.sh`) that stops Claude
-from running `git push`, `git reset --hard` and similar commands in this project. Remove it from
+from running `git push`, `git reset --hard` and similar commands in this project. It only
+applies when you work inside this repository, not when you install the plugin. Remove it from
 `.claude/settings.json` if you don't want it.
 
 An optional Docker dev container, and the extra Claude Code skills used while building this,

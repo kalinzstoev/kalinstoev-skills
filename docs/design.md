@@ -107,11 +107,27 @@ Added 2026-11-15. The skill should be usable by someone who has never opened a t
   command.
 - The Docker dev container is the author's preference for isolation, not a requirement.
 
+## Packaging
+
+Added 2026-11-15.
+
+- The repo root is a Claude Code plugin (`.claude-plugin/plugin.json`) and a one-plugin
+  marketplace (`.claude-plugin/marketplace.json`, source `./`), so anyone can install with
+  `/plugin install ebay-lister --marketplace kalinzstoev/ebay-lister` and get updates.
+- The skill sits in `skills/ebay-lister/`, the standard location that both the plugin loader
+  and the `npx skills` CLI look in. It was in `.claude/skills/` while this was a personal
+  project; that only worked for people who opened this repo's folder.
+- `plugin.json` has no `version`, so each pushed commit is a new version and users get
+  updates without a manual bump.
+- `CLAUDE.md` moved to `.claude/CLAUDE.md`: Claude Code warns about one at a plugin root.
+- Installed as a plugin the skill is `/ebay-lister:ebay-lister`; copied or installed as a
+  plain skill it is `/ebay-lister`. It also triggers from a plain request.
+
 ## Technical decisions
 
-- A **Claude Code skill**, `.claude/skills/ebay-lister/`, committed in this repo. It also works
-  outside the container: copy the folder into `~/.claude/skills/` (Windows:
-  `%USERPROFILE%\.claude\skills\`).
+- A **Claude Code skill**, `skills/ebay-lister/`, committed in this repo. The repo is also a
+  Claude Code plugin and its own marketplace (see "Packaging"), and the folder still works
+  copied into `~/.claude/skills/` (Windows: `%USERPROFILE%\.claude\skills\`).
   - `SKILL.md`: the workflow above and the listing rules.
   - `ebay_lister.py`: **Python 3, standard library only** (no venv, no packages). Commands:
     `start` (create the inbox, report the folder), `preview` (build `preview.html` from the
