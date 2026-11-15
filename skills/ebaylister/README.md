@@ -7,7 +7,7 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 
 ## How a batch works
 
-1. **Run `/ebay-lister:ebay-lister`** in Claude Code (`/ebay-lister` if you installed it as a
+1. **Run `/kalinstoev-skills:ebaylister`** in Claude Code (`/ebaylister` if you installed it as a
    plain skill), or just ask Claude to help you list things on eBay. The first time, Claude checks Python is installed,
    creates `inbox/` in the working folder and tells you where it is.
 2. **Photos in.** Copy the photos (or the Google Photos download zip) into `inbox/` and tell
@@ -121,8 +121,8 @@ Tests: `python3 -m unittest test_ebay_lister.py` from this folder.
 
 ## Using it outside this project
 
-Copy this folder to `~/.claude/skills/ebay-lister` (Windows:
-`%USERPROFILE%\.claude\skills\ebay-lister`) and run `/ebay-lister` from any folder that has an
+Copy this folder to `~/.claude/skills/ebaylister` (Windows:
+`%USERPROFILE%\.claude\skills\ebaylister`) and run `/ebaylister` from any folder that has an
 `inbox/`. On Windows use `python` instead of `python3`.
 
 The workflow Claude follows is in `SKILL.md`; the design and the reasons behind it are in

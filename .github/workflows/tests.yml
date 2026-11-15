@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Unit tests (standard library only, nothing to install)
-        working-directory: skills/ebay-lister
+        working-directory: skills/ebaylister
         run: python -m unittest -v test_ebay_lister.py
       - name: Plugin manifests are valid JSON
         run: |

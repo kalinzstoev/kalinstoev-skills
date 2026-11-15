@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installs the third-party Claude Code skills used to develop this project into
-# .claude/skills (run from the project root). Not needed to use the ebay-lister skill.
+# .claude/skills (run from the project root). Not needed to use the ebaylister skill.
 # Safe to re-run; skips repos whose skills are all present.
 set -euo pipefail
 
@@ -19,4 +19,4 @@ install() {
 install mattpocock/skills grill-me grilling research wizard git-guardrails-claude-code
 install anthropics/skills claude-api
 
-# ebay-lister is this project's own skill: it's committed in skills/, not installed here
+# ebaylister is this project's own skill: it's committed in skills/, not installed here

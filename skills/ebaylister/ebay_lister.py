@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Helpers for the ebay-lister skill: build a preview page and write eBay's drafts CSV.
+"""Helpers for the ebaylister skill: build a preview page and write eBay's drafts CSV.
 
 Standard library only, so it runs anywhere Python 3 does (container or Windows).
 

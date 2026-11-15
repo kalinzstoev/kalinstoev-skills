@@ -6,12 +6,12 @@ __pycache__/
 # Personal Claude Code permissions, not shared
 .claude/settings.local.json
 
-# Working folders for the ebay-lister skill (photos and generated drafts)
+# Working folders for the ebaylister skill (photos and generated drafts)
 inbox/
 items/
 out/
 preview.html
 ebay-template.csv
 
-# Third-party skills installed by scripts/setup-skills.sh (ebay-lister lives in skills/)
+# Third-party skills installed by scripts/setup-skills.sh (ebaylister lives in skills/)
 .claude/skills/

@@ -10,7 +10,7 @@ The design is settled in `docs/design.md` (from a `/grill-me` session). Follow i
 update it first if the plan changes.
 
 The project is public (MIT). Keep the docs usable by someone who has never seen it: the
-top-level `README.md` is for people using the skill, `skills/ebay-lister/README.md`
+top-level `README.md` is for people using the skill, `skills/ebaylister/README.md`
 is the full walkthrough, `docs/dev-container.md` covers the optional container.
 
 ## Environment
@@ -37,7 +37,7 @@ is the full walkthrough, `docs/dev-container.md` covers the optional container.
 ## Git
 
 - Repo on `main`; commits are signed as me via repo-local config. Commit in small steps.
-- Remote: `origin` is `github.com/kalinzstoev/ebay-lister` (public). A plain `git push` is
+- Remote: `origin` is `github.com/kalinzstoev/kalinstoev-skills` (public). A plain `git push` is
   allowed in this project (agreed 2026-11-15); push when I ask or when a piece of work is
   finished and committed.
 - A PreToolUse hook (`.claude/hooks/block-dangerous-git.sh`) blocks force pushes,
@@ -49,8 +49,8 @@ is the full walkthrough, `docs/dev-container.md` covers the optional container.
 
 ## Skills
 
-`ebay-lister` is this project's own skill, in `skills/ebay-lister`. The repo is also a Claude
-Code plugin and its own marketplace (`.claude-plugin/`); the skill is not a project skill,
+`ebaylister` is this project's own skill, in `skills/ebaylister`. The repo is also a Claude
+Code plugin, `kalinstoev-skills` (a collection: new skills go in `skills/<name>/`), and its own marketplace (`.claude-plugin/`); the skill is not a project skill,
 so load it with `claude --plugin-dir .` or install the plugin. This file lives in `.claude/`
 so it isn't at the plugin root.
 The other skills are third-party, installed into `.claude/skills` by

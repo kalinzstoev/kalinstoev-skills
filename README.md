@@ -1,6 +1,6 @@
 # eBay Lister
 
-[![tests](https://github.com/kalinzstoev/ebay-lister/actions/workflows/tests.yml/badge.svg)](https://github.com/kalinzstoev/ebay-lister/actions/workflows/tests.yml)
+[![tests](https://github.com/kalinzstoev/kalinstoev-skills/actions/workflows/tests.yml/badge.svg)](https://github.com/kalinzstoev/kalinstoev-skills/actions/workflows/tests.yml)
 
 A [Claude Code](https://claude.com/claude-code) skill that turns phone photos of things you
 want to sell into eBay **draft** listings.
@@ -25,6 +25,9 @@ your photos and describe the item for you. That is the part this skill does.
 It is meant for clearing out a cupboard, not running a shop: a dozen items at a time, no
 database, no accounts to set up.
 
+This repository is `kalinstoev-skills`, a Claude Code plugin for my skills. `ebaylister` is
+the first one; new skills will be added alongside it in `skills/`.
+
 ## What it does and doesn't do
 
 - **It only states what the photos show.** No "genuine", "works perfectly" or "waterproof"
@@ -37,7 +40,7 @@ database, no accounts to set up.
 - **You finish each draft in eBay.** eBay's draft upload carries the title, description, price
   and category. It doesn't carry photos, condition, item specifics or postage, so you set those
   in the eBay app before publishing (a few minutes per item, from a tick-list the skill writes).
-  See [what carries into the draft](skills/ebay-lister/README.md#what-carries-into-the-draft).
+  See [what carries into the draft](skills/ebaylister/README.md#what-carries-into-the-draft).
 - **Tested on eBay UK only.** Other eBay sites can be used by supplying that site's own
   template, but nobody has tried them yet. See [Other eBay sites](#other-ebay-sites).
 
@@ -54,14 +57,14 @@ database, no accounts to set up.
 In a Claude Code session, run:
 
 ```
-/plugin install ebay-lister --marketplace kalinzstoev/ebay-lister
+/plugin install kalinstoev-skills --marketplace kalinzstoev/kalinstoev-skills
 ```
 
 On an older Claude Code, where that isn't recognised, use the two-step form:
 
 ```
-/plugin marketplace add kalinzstoev/ebay-lister
-/plugin install ebay-lister@kalinzstoev
+/plugin marketplace add kalinzstoev/kalinstoev-skills
+/plugin install kalinstoev-skills@kalinzstoev
 ```
 
 Choose "Install for you" when asked. The skill is then available in every folder.
@@ -74,7 +77,7 @@ Other ways to install are [listed below](#other-ways-to-install).
    Claude Code, and type:
 
    ```
-   /ebay-lister:ebay-lister
+   /kalinstoev-skills:ebaylister
    ```
 
    or just say "help me list some things on eBay". Claude creates a photos folder (`inbox`)
@@ -98,7 +101,7 @@ Other ways to install are [listed below](#other-ways-to-install).
    condition, check what eBay suggests, publish.
 
 You never type a command or edit a file yourself. The full walkthrough, with the description
-layout and what each file is for, is in the [skill's README](skills/ebay-lister/README.md).
+layout and what each file is for, is in the [skill's README](skills/ebaylister/README.md).
 
 Your photos, listings and CSVs stay in the folder you started in (`inbox/`, `items/`, `out/`).
 
@@ -120,7 +123,7 @@ expect. If it works, or doesn't, for your site, please open an issue so this sec
 ## Changing how listings are written
 
 The rules Claude follows are plain text in
-[`skills/ebay-lister/SKILL.md`](skills/ebay-lister/SKILL.md): how titles are built, the
+[`skills/ebaylister/SKILL.md`](skills/ebaylister/SKILL.md): how titles are built, the
 description layout, how prices are estimated. Edit that file to change them, or just tell
 Claude what you want differently during a run.
 
@@ -129,23 +132,23 @@ Claude what you want differently during a run.
 - **From your shell,** without opening a session:
 
   ```bash
-  claude plugin marketplace add kalinzstoev/ebay-lister
+  claude plugin marketplace add kalinzstoev/kalinstoev-skills
   ```
 
   ```bash
-  claude plugin install ebay-lister@kalinzstoev
+  claude plugin install kalinstoev-skills@kalinzstoev
   ```
 
 - **As a plain skill,** with the [skills CLI](https://github.com/vercel-labs/skills) (needs
-  Node). The skill is then called `/ebay-lister`:
+  Node). The skill is then called `/ebaylister`:
 
   ```bash
-  npx skills add kalinzstoev/ebay-lister
+  npx skills add kalinzstoev/kalinstoev-skills
   ```
 
 - **By hand:** download this repository (Code → Download ZIP) and copy the
-  `skills/ebay-lister` folder into `~/.claude/skills/` (on Windows,
-  `%USERPROFILE%\.claude\skills\`). The skill is then called `/ebay-lister`.
+  `skills/ebaylister` folder into `~/.claude/skills/` (on Windows,
+  `%USERPROFILE%\.claude\skills\`). The skill is then called `/ebaylister`.
 
 ## How it is built, and why
 
@@ -175,7 +178,7 @@ before it was made public.
 ## Project layout
 
 ```
-skills/ebay-lister/           the skill: SKILL.md, ebay_lister.py, tests, README
+skills/ebaylister/            the skill: SKILL.md, ebay_lister.py, tests, README
 .claude-plugin/               plugin and marketplace manifests, for /plugin install
 .github/workflows/tests.yml   runs the tests on Linux, Windows and macOS
 docs/design.md                why it works the way it does
@@ -195,7 +198,7 @@ claude --plugin-dir .
 Run the tests from the skill folder:
 
 ```bash
-cd skills/ebay-lister && python3 -m unittest test_ebay_lister.py
+cd skills/ebaylister && python3 -m unittest test_ebay_lister.py
 ```
 
 (Use `python` instead of `python3` on Windows.)

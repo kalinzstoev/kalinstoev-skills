@@ -4,13 +4,13 @@
     "name": "Kalin Stoev"
   },
   "metadata": {
-    "description": "eBay Lister: turn photos of things to sell into eBay draft listings"
+    "description": "Kalin Stoev's Claude Code skills"
   },
   "plugins": [
     {
-      "name": "ebay-lister",
+      "name": "kalinstoev-skills",
       "source": "./",
-      "description": "Turn phone photos of things you want to sell into eBay draft listings"
+      "description": "Kalin Stoev's Claude Code skills. ebaylister: turn phone photos of things you want to sell into eBay draft listings"
     }
   ]
 }

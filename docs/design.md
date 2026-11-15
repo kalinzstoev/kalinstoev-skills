@@ -11,7 +11,7 @@ change the doc first if the plan changes.
 
 1. Take photos of all the items with the phone (Android, JPEG).
 2. Copy them in one dump into `inbox/` in the working folder.
-3. In Claude Code, run `/ebay-lister`.
+3. In Claude Code, run `/ebaylister`.
 4. Claude looks at the photos and sorts them into items (filename order helps: `IMG_0412`,
    `0413`, …). It shows a short summary, one line per item with its photos; I confirm or
    correct it. Photos are then moved into `items/<id>/photos/`, never deleted.
@@ -93,7 +93,7 @@ Added 2026-11-15, when the project was opened up for others to use.
 
 Added 2026-11-15. The skill should be usable by someone who has never opened a terminal.
 
-- `/ebay-lister` is the only thing the user types. Claude checks Python, and the script's
+- `/ebaylister` is the only thing the user types. Claude checks Python, and the script's
   `start` command creates `inbox/`, unpacks photo zips and reports what is there, so the user
   is told where to put photos instead of having to know. Unzipping is in the script because
   a test run on Windows showed shell `unzip` can't be relied on.
@@ -113,19 +113,24 @@ Added 2026-11-15.
 
 - The repo root is a Claude Code plugin (`.claude-plugin/plugin.json`) and a one-plugin
   marketplace (`.claude-plugin/marketplace.json`, source `./`), so anyone can install with
-  `/plugin install ebay-lister --marketplace kalinzstoev/ebay-lister` and get updates.
-- The skill sits in `skills/ebay-lister/`, the standard location that both the plugin loader
+  `/plugin install kalinstoev-skills --marketplace kalinzstoev/kalinstoev-skills` and get updates.
+- The skill sits in `skills/ebaylister/`, the standard location that both the plugin loader
   and the `npx skills` CLI look in. It was in `.claude/skills/` while this was a personal
   project; that only worked for people who opened this repo's folder.
 - `plugin.json` has no `version`, so each pushed commit is a new version and users get
   updates without a manual bump.
 - `CLAUDE.md` moved to `.claude/CLAUDE.md`: Claude Code warns about one at a plugin root.
-- Installed as a plugin the skill is `/ebay-lister:ebay-lister`; copied or installed as a
-  plain skill it is `/ebay-lister`. It also triggers from a plain request.
+- Installed as a plugin the skill is `/kalinstoev-skills:ebaylister`; copied or installed as a
+  plain skill it is `/ebaylister`. It also triggers from a plain request.
+- Renamed the same day from plugin and skill both called `ebay-lister`, which gave the
+  repetitive `/ebay-lister:ebay-lister`. Following the layout of `mattpocock/skills`, the
+  plugin (and repo) is named for the collection, `kalinstoev-skills`, and each skill for
+  what it does. More skills can be added under `skills/` without a new install. The
+  script keeps its name, `ebay_lister.py`.
 
 ## Technical decisions
 
-- A **Claude Code skill**, `skills/ebay-lister/`, committed in this repo. The repo is also a
+- A **Claude Code skill**, `skills/ebaylister/`, committed in this repo. The repo is also a
   Claude Code plugin and its own marketplace (see "Packaging"), and the folder still works
   copied into `~/.claude/skills/` (Windows: `%USERPROFILE%\.claude\skills\`).
   - `SKILL.md`: the workflow above and the listing rules.

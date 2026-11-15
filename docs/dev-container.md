@@ -47,7 +47,7 @@ committed here (`skills-lock.json` records where each one comes from):
   [mattpocock/skills](https://github.com/mattpocock/skills)
 - `claude-api` from [anthropics/skills](https://github.com/anthropics/skills)
 
-The script needs Node (`npx`). The `ebay-lister` skill itself is part of this repo.
+The script needs Node (`npx`). The `ebaylister` skill itself is part of this repo.
 
 ## Secrets
 

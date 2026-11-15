@@ -1,5 +1,5 @@
 ---
-name: ebay-lister
+name: ebaylister
 description: Turn a folder of item photos into eBay draft listings. Sorts photos from inbox/ into items, writes title, category, condition, description and price for each, shows a preview, then writes a Seller Hub "Create drafts" CSV for the user to upload. Use when the user wants to list items on eBay from photos, process the inbox, or make the drafts CSV.
 ---
 
@@ -52,7 +52,7 @@ Assume the user is not technical. They want to sell some things, not learn the t
 
 1. Check Python works: try `python3 --version`, then `python --version`. If neither does, tell
    the user to install Python from python.org (on Windows, ticking "Add python.exe to PATH"),
-   then restart Claude Code and run `/ebay-lister` again. Stop there.
+   then restart Claude Code and run `/ebaylister` again. Stop there.
 2. Run `start`.
 3. If the inbox has no photos and no zip, give the user its full path and ask them to copy
    their photos there and tell you when they have. Pass on these tips:
