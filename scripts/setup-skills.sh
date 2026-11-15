@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Installs the project's Claude Code skills into /workspace/.claude/skills.
+# Installs the third-party Claude Code skills used to develop this project into
+# .claude/skills (run from the project root). Not needed to use the ebay-lister skill.
 # Safe to re-run; skips repos whose skills are all present.
 set -euo pipefail
 
