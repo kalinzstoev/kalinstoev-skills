@@ -166,7 +166,7 @@ cd skills/ebay-lister && python3 -m unittest test_ebay_lister.py
 (Use `python` instead of `python3` on Windows.)
 
 The repo includes a Claude Code hook (`.claude/hooks/block-dangerous-git.sh`) that stops Claude
-from running `git push`, `git reset --hard` and similar commands in this project. It only
+from running force pushes, `git reset --hard` and similar commands in this project. It only
 applies when you work inside this repository, not when you install the plugin. Remove it from
 `.claude/settings.json` if you don't want it.
 

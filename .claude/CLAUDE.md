@@ -37,9 +37,12 @@ is the full walkthrough, `docs/dev-container.md` covers the optional container.
 ## Git
 
 - Repo on `main`; commits are signed as me via repo-local config. Commit in small steps.
-- A PreToolUse hook (`.claude/hooks/block-dangerous-git.sh`) blocks `git push`,
+- Remote: `origin` is `github.com/kalinzstoev/ebay-lister` (public). A plain `git push` is
+  allowed in this project (agreed 2026-11-15); push when I ask or when a piece of work is
+  finished and committed.
+- A PreToolUse hook (`.claude/hooks/block-dangerous-git.sh`) blocks force pushes,
   `reset --hard`, `clean -f`, `branch -D`, `checkout .` / `restore .`. Don't try to work
-  around it; ask me instead. I push myself.
+  around it; ask me instead.
 - `core.filemode` is off (Windows bind mount shows every file as executable). Mark new
   scripts executable with `git update-index --chmod=+x <file>`.
 - Line endings are LF for all text files (`.gitattributes`).
