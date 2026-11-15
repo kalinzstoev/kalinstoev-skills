@@ -6,6 +6,7 @@ import io
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import ebay_lister
@@ -140,19 +141,43 @@ class StartTest(ItemsTestCase):
     def test_creates_the_inbox_and_reports_what_is_there(self):
         inbox = self.root / "inbox"
         self.add(make_item())
-        args = ["start", "--inbox", str(inbox), "--items", str(self.items)]
+        args = ["start", "--inbox", str(inbox), "--items", str(self.items),
+                "--out-dir", str(self.root / "out")]
         self.assertEqual(ebay_lister.main(args), 0)
         self.assertTrue(inbox.is_dir())
 
-        for name in ("IMG_1.jpg", "IMG_2.JPG", "photos.zip", "IMG_3.heic"):
+        for name in ("IMG_1.jpg", "IMG_2.JPG", "IMG_3.heic"):
             (inbox / name).write_bytes(b"")
         shown = io.StringIO()
         with contextlib.redirect_stdout(shown):
             ebay_lister.main(args)
-        self.assertIn("2 photo(s), 1 zip file(s)", shown.getvalue())
+        self.assertIn("2 photo(s)", shown.getvalue())
         self.assertIn("IMG_3.heic", shown.getvalue())
         self.assertIn("Items so far: 1 (1 approved", shown.getvalue())
         self.assertIn("eBay site: UK", shown.getvalue())
+
+
+    def test_unpacks_only_images_from_a_zip_and_keeps_the_zip(self):
+        inbox = self.root / "inbox"
+        inbox.mkdir()
+        (inbox / "IMG_1.jpg").write_bytes(b"already here")
+        with zipfile.ZipFile(inbox / "Photos.zip", "w") as z:
+            z.writestr("Photos/IMG_1.jpg", b"from zip")
+            z.writestr("Photos/IMG_2.jpg", b"two")
+            z.writestr("../../escape.jpg", b"three")
+            z.writestr("Photos/notes.txt", b"not a photo")
+        shown = io.StringIO()
+        with contextlib.redirect_stdout(shown):
+            ebay_lister.main(["start", "--inbox", str(inbox), "--items", str(self.items),
+                              "--out-dir", str(self.root / "out")])
+
+        self.assertEqual(sorted(f.name for f in inbox.iterdir()),
+                         ["IMG_1-1.jpg", "IMG_1.jpg", "IMG_2.jpg", "escape.jpg"])
+        self.assertEqual((inbox / "IMG_1.jpg").read_bytes(), b"already here")
+        self.assertFalse((self.root / "escape.jpg").exists())
+        self.assertTrue((self.root / "out" / "Photos.zip").exists())
+        self.assertIn("unpacked 3 image(s) from Photos.zip", shown.getvalue())
+        self.assertIn("4 photo(s)", shown.getvalue())
 
 
 US_TEMPLATE = (

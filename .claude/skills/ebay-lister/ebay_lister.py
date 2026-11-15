@@ -3,7 +3,7 @@
 
 Standard library only, so it runs anywhere Python 3 does (container or Windows).
 
-    python ebay_lister.py start   [--inbox inbox] [--items items]
+    python ebay_lister.py start   [--inbox inbox] [--items items] [--out-dir out]
     python ebay_lister.py preview [--items items] [--out preview.html] [--open]
     python ebay_lister.py csv     [--items items] [--out-dir out]
     python ebay_lister.py site
@@ -21,8 +21,10 @@ import datetime
 import html
 import json
 import re
+import shutil
 import sys
 import webbrowser
+import zipfile
 from pathlib import Path
 
 # The only Action this tool may ever write. Anything else (e.g. "Add") would create a
@@ -60,6 +62,8 @@ TITLE_MAX = 80
 STATUSES = {"draft", "approved", "in-csv"}
 # Photo types Claude can look at directly; anything else in the inbox is reported.
 PHOTO_TYPES = {".jpg", ".jpeg", ".png", ".webp"}
+# Also unpacked from zips, so they are reported rather than silently left behind.
+OTHER_IMAGE_TYPES = {".heic", ".heif"}
 
 
 # ── Items ────────────────────────────────────────────────────────────────────
@@ -169,18 +173,55 @@ def cmd_site(args):
 
 # ── Start ────────────────────────────────────────────────────────────────────
 
+def free_path(folder, name):
+    """folder/name, with -1, -2… added before the extension if that file already exists."""
+    path = folder / name
+    count = 0
+    while path.exists():
+        count += 1
+        path = folder / f"{Path(name).stem}-{count}{Path(name).suffix}"
+    return path
+
+
+def unpack_zips(inbox, out_dir):
+    """Unpack the images in every zip in the inbox, then move the zip to out_dir.
+
+    Only image files are taken, each under its bare file name (folders inside the zip are
+    dropped, so nothing can land outside the inbox), and nothing is overwritten.
+    Returns {zip name: number of images unpacked}.
+    """
+    unpacked = {}
+    for archive in sorted(f for f in inbox.iterdir() if f.suffix.lower() == ".zip"):
+        count = 0
+        with zipfile.ZipFile(archive) as z:
+            for member in z.infolist():
+                name = Path(member.filename.replace("\\", "/")).name
+                if member.is_dir() or Path(name).suffix.lower() not in (
+                        PHOTO_TYPES | OTHER_IMAGE_TYPES):
+                    continue
+                with z.open(member) as src, open(free_path(inbox, name), "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                count += 1
+        out_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(archive), str(free_path(out_dir, archive.name)))
+        unpacked[archive.name] = count
+    return unpacked
+
+
 def cmd_start(args):
-    """Make sure the inbox exists and say what is in the working folder."""
+    """Make sure the inbox exists, unpack any photo zips and say what is in the folder."""
     info = site_info(load_template(args.template))
     inbox = Path(args.inbox)
     inbox.mkdir(parents=True, exist_ok=True)
+    unpacked = unpack_zips(inbox, Path(args.out_dir))
     files = sorted(f for f in inbox.iterdir() if f.is_file())
     photos = [f for f in files if f.suffix.lower() in PHOTO_TYPES]
-    zips = [f for f in files if f.suffix.lower() == ".zip"]
-    other = [f.name for f in files if f not in photos and f not in zips]
+    other = [f.name for f in files if f not in photos]
 
     print(f"Inbox folder: {inbox.resolve()}")
-    print(f"  {len(photos)} photo(s), {len(zips)} zip file(s)")
+    for name, count in unpacked.items():
+        print(f"  unpacked {count} image(s) from {name} (zip moved to {Path(args.out_dir)})")
+    print(f"  {len(photos)} photo(s)")
     if other:
         print(f"  other files (not photos Claude can read): {', '.join(other)}")
     items = load_items(args.items)
@@ -425,6 +466,7 @@ def main(argv=None):
     p = sub.add_parser("start", help="create the inbox folder and show what is in it")
     p.add_argument("--inbox", default="inbox")
     p.add_argument("--items", default="items")
+    p.add_argument("--out-dir", default="out")
     p.set_defaults(func=cmd_start)
     p = sub.add_parser("preview", help="build an HTML preview of all items")
     p.add_argument("--items", default="items")
@@ -446,7 +488,7 @@ def main(argv=None):
         sys.stdout.reconfigure(errors="replace")
     try:
         return args.func(args)
-    except ValueError as error:
+    except (ValueError, zipfile.BadZipFile) as error:
         print(error)
         return 1
 

@@ -26,8 +26,9 @@ ebay-template.csv      optional: eBay's drafts template for a site other than eB
 The script is `ebay_lister.py` in this skill's folder. Run it with `python3` (on Windows,
 `python`) from the working folder:
 
-- `python3 <skill dir>/ebay_lister.py start`: creates `inbox/` if needed and prints its full
-  path, what is in it, how many items exist already, and the eBay site and currency.
+- `python3 <skill dir>/ebay_lister.py start`: creates `inbox/` if needed, unpacks any photo zip
+  in it, and prints its full path, what is in it, how many items exist already, and the eBay
+  site and currency.
 - `python3 <skill dir>/ebay_lister.py preview --open`: builds `preview.html` from all items,
   prints what is still missing per item, and opens the page in the user's browser.
 - `python3 <skill dir>/ebay_lister.py csv`: checks every `approved` item and writes
@@ -82,9 +83,9 @@ names, spelling, currency, the Seller Hub address) follows the site it prints.
 
 ### 1. Sort the photos into items
 
-- If `inbox/` holds a zip (a Google Photos download), list its contents first, extract only
-  plain image files (no paths, no `..`) into `inbox/`, and move the zip to `out/`. Never
-  delete it.
+- Run `start` again once the user says the photos are in. It unpacks any zip in `inbox/` (a
+  Google Photos download) for you: images only, into `inbox/`, with the zip moved to `out/`.
+  Don't unzip by hand.
 - If a photo is blurry or duplicates another, say so and suggest leaving it out of the listing
   (keep the file in the item folder).
 - List `inbox/` sorted by filename. Phone filenames run in shooting order (`IMG_20261024_…`),

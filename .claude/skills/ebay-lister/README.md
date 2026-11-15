@@ -11,7 +11,7 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
    creates `inbox/` in the working folder and tells you where it is.
 2. **Photos in.** Copy the photos (or the Google Photos download zip) into `inbox/` and tell
    Claude.
-3. **Sort.** Claude unzips any zip (the zip is kept in `out/`), looks at every photo and groups
+3. **Sort.** The script unpacks any zip (the zip is kept in `out/`). Claude looks at every photo and groups
    them into items. You get a one-line summary per item and confirm or correct it. Blurry
    photos are flagged.
 4. **Questions.** Claude asks what the photos can't show: brand or model if there's no label,
@@ -106,7 +106,8 @@ All of these are in the working folder and git-ignored.
 
 `ebay_lister.py` is Python 3, standard library only:
 
-- `python3 ebay_lister.py start` creates `inbox/` and reports what is in the working folder.
+- `python3 ebay_lister.py start` creates `inbox/`, unpacks any photo zip in it and reports
+  what is in the working folder.
 - `python3 ebay_lister.py site` prints the eBay site and currency the CSV is written for.
 - `python3 ebay_lister.py preview` builds `preview.html` and lists what's missing per item
   (`--open` also opens it in the browser).

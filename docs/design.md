@@ -94,8 +94,9 @@ Added 2026-11-15, when the project was opened up for others to use.
 Added 2026-11-15. The skill should be usable by someone who has never opened a terminal.
 
 - `/ebay-lister` is the only thing the user types. Claude checks Python, and the script's
-  `start` command creates `inbox/` and reports what is there, so the user is told where to put
-  photos instead of having to know.
+  `start` command creates `inbox/`, unpacks photo zips and reports what is there, so the user
+  is told where to put photos instead of having to know. Unzipping is in the script because
+  a test run on Windows showed shell `unzip` can't be relied on.
 - `preview --open` opens the preview in the browser (falling back to printing the path, e.g.
   in a container).
 - `csv` also writes `out/drafts-<date-time>-checklist.txt`: per item, the photos in order, the
