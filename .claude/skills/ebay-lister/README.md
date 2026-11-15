@@ -14,13 +14,14 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 3. **Sort.** The script unpacks any zip (the zip is kept in `out/`). Claude looks at every photo and groups
    them into items. You get a one-line summary per item and confirm or correct it. Blurry
    photos are flagged.
-4. **Questions.** Claude asks what the photos can't show: brand or model if there's no label,
-   size, age, wear, does it work.
-5. **Move.** Each item's photos move to `items/<id>/photos/` (never deleted).
-6. **Write.** Claude writes `items/<id>/item.json`: title, category, condition, price with a
-   reason, item specifics and the description (the template below).
-7. **Preview.** `preview.html` opens in your browser and shows every item. Ask for changes in
-   chat; Claude edits and rebuilds it.
+4. **Move.** Each item's photos move to `items/<id>/photos/` (never deleted).
+5. **Write.** Claude writes `items/<id>/item.json`: title, category, condition, price with a
+   reason, item specifics and the description (the template below). It only states what the
+   photos show.
+6. **Preview.** `preview.html` opens in your browser and shows every item.
+7. **Questions and changes.** Claude asks, in one short list, what the photos can't show:
+   brand or model if there's no label, size, wear on sides it can't see, does it work. Answer
+   and ask for changes in chat; Claude edits and rebuilds the preview.
 8. **Approve.** Say "approve" and the item is marked approved.
 9. **CSV.** Claude writes `out/drafts-<date-time>.csv` for the approved items, in eBay's
    "Create drafts" format. Every row is `Action=Draft`; the script refuses anything else.

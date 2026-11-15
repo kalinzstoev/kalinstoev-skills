@@ -202,6 +202,11 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 
   Never claim it works, is genuine, or is complete unless the photos show it; put questions for
   the user in `notes`.
+
+  The same goes for the title and specifics. What you know about a brand or model is not
+  evidence about this item: don't state a material ("leather"), a performance claim
+  ("waterproof") or a model name because that product line usually has it. State it only if a
+  label or the photos show it or the user confirms it; otherwise ask.
 - **photos:** paths relative to the item folder, best photo first (the user will add photos in
   eBay in that order).
 - **notes:** anything the user should check or tell you (does it work, the exact size, missing
@@ -213,6 +218,9 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   example inside a container), give the user the file's full path to open themselves.
   Summarise per item what is blank or uncertain, from the script's output and your notes, and
   remind them they can ask for changes in plain words.
+- Ask your questions now, in one short list alongside the preview, so the user answers them
+  while looking at the listings. Facts the user tells you can go in the listing; say in `notes`
+  that they came from the user and not the photos.
 - Apply changes the user asks for ("it's the 2019 model", "drop photo 3", "price it at 20"),
   then rebuild the preview. If they say photos belong to a different item, move them and redo
   both items.
