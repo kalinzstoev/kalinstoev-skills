@@ -27,40 +27,47 @@ database, no accounts to set up.
 
 ## What you need
 
-- [Claude Code](https://claude.com/claude-code) (terminal, desktop app or IDE extension).
-- Python 3. No packages to install.
+- [Claude Code](https://claude.com/claude-code). The Claude desktop app is the easiest way to
+  run it if you don't use a terminal.
+- [Python 3](https://www.python.org/downloads/). Nothing else to install. (On Windows, tick
+  "Add python.exe to PATH" in the installer.)
 - An eBay seller account with Seller Hub.
 
 ## Quick start
 
-1. Get the project:
+1. **Get the project.** On the GitHub page choose Code → Download ZIP and unzip it somewhere
+   you'll find again. Or, if you use git:
 
    ```bash
    git clone https://github.com/kalinzstoev/ebay-lister.git
    ```
 
-2. Copy your photos into an `inbox` folder inside it (create the folder if it isn't there).
-   A zip downloaded from Google Photos works too. Take several photos of each item, one item
-   after another, including any labels and any damage.
-
-3. Start Claude Code in the project folder and run:
+2. **Open that folder in Claude Code and type:**
 
    ```
    /ebay-lister
    ```
 
-4. Answer Claude's questions, open `preview.html` in your browser, and ask for any changes in
-   plain words ("it's a size 10", "drop the blurry photo", "price it at 20").
+   Claude creates a photos folder (`inbox`) and tells you where it is.
 
-5. Say which items you approve. Claude writes `out/drafts-<date-time>.csv`.
+3. **Copy your photos into it** and tell Claude. A zip downloaded from Google Photos works
+   too. Take several photos of each item, one item after another, including any labels and
+   any damage.
 
-6. In eBay: Seller Hub → Reports → Uploads → Upload template, and choose the CSV. Don't open
-   it in Excel first.
+4. **Check Claude's work.** It shows which photos it thinks belong to which item, asks what
+   the photos can't tell it (size, does it work), then opens a preview page in your browser.
+   Ask for changes in plain words: "it's a size 10", "drop the blurry photo", "price it at 20".
 
-7. Open each draft in the eBay app, add its photos, pick the condition, check the details eBay
-   suggests, and publish.
+5. **Say which items you approve.** Claude writes the file to upload and a tick-list of what
+   is left to do, and tells you where both are.
 
-The full walkthrough, with the description layout and what each file is for, is in the
+6. **Upload it to eBay:** Seller Hub → Reports → Uploads → Upload template. Don't open the
+   file in Excel first.
+
+7. **Finish each draft in the eBay app,** following the tick-list: add the photos, pick the
+   condition, check what eBay suggests, publish.
+
+You never type a command or edit a file yourself. The full walkthrough, with the description layout and what each file is for, is in the
 [skill's README](.claude/skills/ebay-lister/README.md).
 
 Your photos, listings and CSVs stay in `inbox/`, `items/` and `out/`. These are git-ignored,

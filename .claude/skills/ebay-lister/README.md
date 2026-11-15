@@ -7,9 +7,10 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 
 ## How a batch works
 
-1. **Photos in.** Copy the photos (or the Google Photos download zip) into `inbox/` in the
-   working folder.
-2. **Run `/ebay-lister`** in Claude Code.
+1. **Run `/ebay-lister`** in Claude Code. The first time, Claude checks Python is installed,
+   creates `inbox/` in the working folder and tells you where it is.
+2. **Photos in.** Copy the photos (or the Google Photos download zip) into `inbox/` and tell
+   Claude.
 3. **Sort.** Claude unzips any zip (the zip is kept in `out/`), looks at every photo and groups
    them into items. You get a one-line summary per item and confirm or correct it. Blurry
    photos are flagged.
@@ -18,15 +19,17 @@ and finish each draft in the eBay app. Nothing here touches your eBay account.
 5. **Move.** Each item's photos move to `items/<id>/photos/` (never deleted).
 6. **Write.** Claude writes `items/<id>/item.json`: title, category, condition, price with a
    reason, item specifics and the description (the template below).
-7. **Preview.** `preview.html` shows every item. Ask for changes in chat; Claude edits and
-   rebuilds it.
+7. **Preview.** `preview.html` opens in your browser and shows every item. Ask for changes in
+   chat; Claude edits and rebuilds it.
 8. **Approve.** Say "approve" and the item is marked approved.
 9. **CSV.** Claude writes `out/drafts-<date-time>.csv` for the approved items, in eBay's
    "Create drafts" format. Every row is `Action=Draft`; the script refuses anything else.
+   Next to it is a `-checklist.txt` file: a tick-list per item of what is left to do in eBay.
 10. **Upload.** Your eBay site (ebay.co.uk) → Seller Hub → Reports → Uploads → Upload template → choose the CSV
     (don't open it in Excel first).
-11. **Finish on the phone.** Open each draft (its Custom label is the item id) and:
-    add the photos in the order from the preview (eBay wants at least 5), pick the condition
+11. **Finish on the phone.** Open each draft (its Custom label is the item id) and follow
+    the checklist:
+    add the photos in the order given (eBay wants at least 5), pick the condition
     Claude suggested, apply eBay's suggested item specifics, check category and postage,
     publish.
 
@@ -93,7 +96,7 @@ inbox/                  new photos or zips
 items/<id>/photos/      an item's photos
 items/<id>/item.json    the listing (status: draft → approved → in-csv)
 preview.html            the preview page
-out/drafts-*.csv        CSVs to upload (and kept zips)
+out/drafts-*.csv        CSVs to upload, each with a -checklist.txt (and kept zips)
 ebay-template.csv       optional: your eBay site's drafts template (not needed for UK)
 ```
 
@@ -103,10 +106,12 @@ All of these are in the working folder and git-ignored.
 
 `ebay_lister.py` is Python 3, standard library only:
 
+- `python3 ebay_lister.py start` creates `inbox/` and reports what is in the working folder.
 - `python3 ebay_lister.py site` prints the eBay site and currency the CSV is written for.
-- `python3 ebay_lister.py preview` builds `preview.html` and lists what's missing per item.
+- `python3 ebay_lister.py preview` builds `preview.html` and lists what's missing per item
+  (`--open` also opens it in the browser).
 - `python3 ebay_lister.py csv` checks every approved item and writes the drafts CSV, then
-  marks those items `in-csv` so they aren't sent twice. To redo one, set its status back to
+  writes the checklist and marks those items `in-csv` so they aren't sent twice. To redo one, set its status back to
   `approved`.
 
 Tests: `python3 -m unittest test_ebay_lister.py` from this folder.

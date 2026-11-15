@@ -89,6 +89,23 @@ Added 2026-11-15, when the project was opened up for others to use.
 - Category IDs and item specific names differ per site, so `SKILL.md` has Claude run
   `ebay_lister.py site` first and work for that site.
 
+## Ease of use
+
+Added 2026-11-15. The skill should be usable by someone who has never opened a terminal.
+
+- `/ebay-lister` is the only thing the user types. Claude checks Python, and the script's
+  `start` command creates `inbox/` and reports what is there, so the user is told where to put
+  photos instead of having to know.
+- `preview --open` opens the preview in the browser (falling back to printing the path, e.g.
+  in a container).
+- `csv` also writes `out/drafts-<date-time>-checklist.txt`: per item, the photos in order, the
+  condition to pick (`condition_suggestion` in `item.json`), the specifics eBay may ask for,
+  and the category and price to check. Finishing drafts in eBay is the most manual step, so it
+  gets a list to tick off.
+- `SKILL.md` tells Claude to use plain words and never ask the user to edit a file or run a
+  command.
+- The Docker dev container is the author's preference for isolation, not a requirement.
+
 ## Technical decisions
 
 - A **Claude Code skill**, `.claude/skills/ebay-lister/`, committed in this repo. It also works
@@ -96,8 +113,9 @@ Added 2026-11-15, when the project was opened up for others to use.
   `%USERPROFILE%\.claude\skills\`).
   - `SKILL.md`: the workflow above and the listing rules.
   - `ebay_lister.py`: **Python 3, standard library only** (no venv, no packages). Commands:
-    `preview` (build `preview.html` from the items), `csv` (validate the approved items and
-    write the drafts CSV) and `site` (show which eBay site the CSV is written for).
+    `start` (create the inbox, report the folder), `preview` (build `preview.html` from the
+    items), `csv` (validate the approved items, write the drafts CSV and the checklist) and
+    `site` (show which eBay site the CSV is written for).
 - Claude Code itself does the photo work (sorting, reading labels, writing the listing). No
   Anthropic API key.
 - **No eBay API and no keys** (decided 2026-10-24). Nothing to set up. If too many drafts need

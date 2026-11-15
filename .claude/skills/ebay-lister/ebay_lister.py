@@ -3,7 +3,8 @@
 
 Standard library only, so it runs anywhere Python 3 does (container or Windows).
 
-    python ebay_lister.py preview [--items items] [--out preview.html]
+    python ebay_lister.py start   [--inbox inbox] [--items items]
+    python ebay_lister.py preview [--items items] [--out preview.html] [--open]
     python ebay_lister.py csv     [--items items] [--out-dir out]
     python ebay_lister.py site
 
@@ -21,6 +22,7 @@ import html
 import json
 import re
 import sys
+import webbrowser
 from pathlib import Path
 
 # The only Action this tool may ever write. Anything else (e.g. "Add") would create a
@@ -56,6 +58,8 @@ CURRENCY_SYMBOLS = {"GBP": "£", "USD": "$", "EUR": "€", "AUD": "A$", "CAD": "
 CONDITIONS = {"NEW", "USED"}
 TITLE_MAX = 80
 STATUSES = {"draft", "approved", "in-csv"}
+# Photo types Claude can look at directly; anything else in the inbox is reported.
+PHOTO_TYPES = {".jpg", ".jpeg", ".png", ".webp"}
 
 
 # ── Items ────────────────────────────────────────────────────────────────────
@@ -163,6 +167,31 @@ def cmd_site(args):
     return 0
 
 
+# ── Start ────────────────────────────────────────────────────────────────────
+
+def cmd_start(args):
+    """Make sure the inbox exists and say what is in the working folder."""
+    info = site_info(load_template(args.template))
+    inbox = Path(args.inbox)
+    inbox.mkdir(parents=True, exist_ok=True)
+    files = sorted(f for f in inbox.iterdir() if f.is_file())
+    photos = [f for f in files if f.suffix.lower() in PHOTO_TYPES]
+    zips = [f for f in files if f.suffix.lower() == ".zip"]
+    other = [f.name for f in files if f not in photos and f not in zips]
+
+    print(f"Inbox folder: {inbox.resolve()}")
+    print(f"  {len(photos)} photo(s), {len(zips)} zip file(s)")
+    if other:
+        print(f"  other files (not photos Claude can read): {', '.join(other)}")
+    items = load_items(args.items)
+    counts = {status: sum(i.get("status", "draft") == status for i in items)
+              for status in sorted(STATUSES)}
+    print(f"Items so far: {len(items)} "
+          f"({', '.join(f'{n} {status}' for status, n in counts.items())})")
+    print(f"eBay site: {info.get('SiteID', '?')}, currency: {info.get('Currency', '?')}")
+    return 0
+
+
 # ── CSV ──────────────────────────────────────────────────────────────────────
 
 def csv_rows(items, template=None):
@@ -200,6 +229,34 @@ def csv_rows(items, template=None):
     return rows
 
 
+def checklist(items, csv_name, symbol):
+    """What the seller still does in eBay after the upload, as plain text to tick off."""
+    lines = [
+        "Finish your drafts in eBay",
+        "",
+        f"1. Upload {csv_name}: Seller Hub > Reports > Uploads > Upload template.",
+        "   Don't open the file in Excel first.",
+        "2. Open each draft below in the eBay app or Seller Hub and tick off the steps.",
+        "   Each draft's custom label is the short name at the start of its entry here.",
+    ]
+    for item in items:
+        photos = [Path(photo).name for photo in item.get("photos", [])]
+        suggestion = str(item.get("condition_suggestion", "")).strip()
+        blanks = blank_specifics(item)
+        lines += [
+            "",
+            f"{item['id']}: {item['title']}",
+            f"  [ ] Add the {len(photos)} photo(s) in this order: {', '.join(photos)}",
+            "  [ ] Pick the condition" + (f" (suggested: {suggestion})" if suggestion else ""),
+            "  [ ] Accept the item specifics eBay suggests"
+            + (f"; it may ask you for: {', '.join(blanks)}" if blanks else ""),
+            f"  [ ] Check the category: {item.get('category_name') or item['category_id']}",
+            f"  [ ] Check the price ({symbol}{float(item['price']):.2f}) and the postage",
+            "  [ ] Publish",
+        ]
+    return "\n".join(lines) + "\n"
+
+
 def write_csv(rows, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -229,7 +286,11 @@ def cmd_csv(args):
         save_item(item)
         note = f" (blank specifics: {', '.join(blank_specifics(item))})" if blank_specifics(item) else ""
         print(f"  {item['id']}: {item['title']}{note}")
-    print(f"Wrote {len(items)} draft(s) for eBay {site_info(template).get('SiteID', '?')} to {path}")
+    info = site_info(template)
+    todo = path.with_name(f"{path.stem}-checklist.txt")
+    todo.write_text(checklist(items, path.name, info["symbol"]), encoding="utf-8")
+    print(f"Wrote {len(items)} draft(s) for eBay {info.get('SiteID', '?')} to {path.resolve()}")
+    print(f"What to do next in eBay: {todo.resolve()}")
     return 0
 
 
@@ -311,6 +372,9 @@ def render_item(item, page_dir, symbol="£"):
         price = f"{symbol}{float(item.get('price')):.2f}"
     except (TypeError, ValueError):
         price = f"{symbol}?"
+    suggestion = str(item.get("condition_suggestion", "")).strip()
+    if suggestion:
+        suggestion = f" · pick in eBay: {esc(suggestion)}"
     notes = "".join(f'<p class="note">{esc(n)}</p>' for n in item.get("notes", []))
     price_note = item.get("price_note")
     if price_note:
@@ -320,7 +384,7 @@ def render_item(item, page_dir, symbol="£"):
   <div class="top"><span>{esc(item.get("id"))} · {len(item.get("photos", []))} photo(s)</span>
   <span>Category {esc(item.get("category_id"))} · {esc(item.get("category_name"))}</span></div>
   <h2>{esc(item.get("title"))}</h2>
-  <div class="note">{len(str(item.get("title", "")))}/{TITLE_MAX} characters · Condition: {esc(item.get("condition"))}</div>
+  <div class="note">{len(str(item.get("title", "")))}/{TITLE_MAX} characters · Condition: {esc(item.get("condition"))}{suggestion}</div>
   <div class="price">{price}</div>
   {state}
   <div class="photos">{"".join(photos)}</div>
@@ -345,6 +409,11 @@ def cmd_preview(args):
         if blanks:
             flags += f"; blank specifics: {', '.join(blanks)}"
         print(f"  {item.get('id')} [{item.get('status', 'draft')}]: {flags}")
+    if args.open:
+        if webbrowser.open(out.resolve().as_uri()):
+            print("Opened the preview in the browser.")
+        else:
+            print(f"Couldn't open a browser. Open this file by hand: {out.resolve()}")
     return 0
 
 
@@ -353,9 +422,14 @@ def cmd_preview(args):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("start", help="create the inbox folder and show what is in it")
+    p.add_argument("--inbox", default="inbox")
+    p.add_argument("--items", default="items")
+    p.set_defaults(func=cmd_start)
     p = sub.add_parser("preview", help="build an HTML preview of all items")
     p.add_argument("--items", default="items")
     p.add_argument("--out", default="preview.html")
+    p.add_argument("--open", action="store_true", help="open the preview in the browser")
     p.set_defaults(func=cmd_preview)
     p = sub.add_parser("csv", help="write the drafts CSV for approved items")
     p.add_argument("--items", default="items")
@@ -367,6 +441,9 @@ def main(argv=None):
         p.add_argument("--template", help="eBay's \"Create drafts\" template for your site "
                        f"(default: {TEMPLATE_FILE} in the working folder, else eBay UK)")
     args = parser.parse_args(argv)
+    # Titles and notes can hold characters a Windows console can't print; don't crash on them.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     try:
         return args.func(args)
     except ValueError as error:

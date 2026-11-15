@@ -26,17 +26,45 @@ ebay-template.csv      optional: eBay's drafts template for a site other than eB
 The script is `ebay_lister.py` in this skill's folder. Run it with `python3` (on Windows,
 `python`) from the working folder:
 
-- `python3 <skill dir>/ebay_lister.py site`: prints the eBay site and currency the CSV will be
-  written for.
-- `python3 <skill dir>/ebay_lister.py preview`: builds `preview.html` from all items and prints
-  what is still missing per item.
+- `python3 <skill dir>/ebay_lister.py start`: creates `inbox/` if needed and prints its full
+  path, what is in it, how many items exist already, and the eBay site and currency.
+- `python3 <skill dir>/ebay_lister.py preview --open`: builds `preview.html` from all items,
+  prints what is still missing per item, and opens the page in the user's browser.
 - `python3 <skill dir>/ebay_lister.py csv`: checks every `approved` item and writes
-  `out/drafts-<date-time>.csv`. It refuses if any approved item has a problem, and marks the
-  written items `in-csv`.
+  `out/drafts-<date-time>.csv` plus a matching `-checklist.txt` of what is left to do in eBay.
+  It refuses if any approved item has a problem, and marks the written items `in-csv`.
+- `python3 <skill dir>/ebay_lister.py site`: prints only the eBay site and currency.
+
+## Talking to the user
+
+Assume the user is not technical. They want to sell some things, not learn the tool.
+
+- Use plain words. Say "the photos folder", "the preview page", "the file to upload"; don't
+  mention JSON, scripts, commands or statuses unless they ask.
+- Never ask them to edit a file or run a command. You do that. Give full folder paths they can
+  paste into their file manager.
+- Ask your questions about all the items in one short list, not one message per item, and
+  only ask what the photos can't answer.
+- At each stage say in a line or two what you did and what happens next.
+
+## Get ready
+
+1. Check Python works: try `python3 --version`, then `python --version`. If neither does, tell
+   the user to install Python from python.org (on Windows, ticking "Add python.exe to PATH"),
+   then restart Claude Code and run `/ebay-lister` again. Stop there.
+2. Run `start`.
+3. If the inbox has no photos and no zip, give the user its full path and ask them to copy
+   their photos there and tell you when they have. Pass on these tips:
+   - several photos per item, one item after another (don't mix them up);
+   - include labels, model numbers, sizes, and any marks or damage;
+   - eBay wants at least 5 photos per listing.
+4. If the inbox has files that aren't JPEG, PNG or WebP (iPhones save HEIC), convert them to
+   JPEG if a tool is installed (`magick`, `sips` on macOS), keeping the originals in `out/`.
+   Otherwise ask the user to export them as JPEG.
 
 ## Which eBay site
 
-Run `site` first. Everything below that depends on the marketplace (category IDs, item specific
+`start` prints the eBay site. Everything below that depends on the marketplace (category IDs, item specific
 names, spelling, currency, the Seller Hub address) follows the site it prints.
 
 - With no `ebay-template.csv` in the working folder the site is **eBay UK** (GBP). This is the
@@ -44,8 +72,9 @@ names, spelling, currency, the Seller Hub address) follows the site it prints.
 - If the user sells on another eBay site, they need that site's own template: Seller Hub →
   Reports → Uploads → Get template → Listings → "Create drafts template", saved unchanged as
   `ebay-template.csv` in the working folder. The script copies its `#INFO` lines and header row,
-  so the CSV matches what that site expects. If `site` shows UK and the user is not a UK seller,
-  stop and ask them to do this before writing any listings.
+  so the CSV matches what that site expects. On a first run (no items yet) with the site showing
+  UK, ask the user once whether they sell on ebay.co.uk; if not, walk them through this before
+  writing any listings.
 - Tell the user once that sites other than UK are untested, and suggest uploading a single
   draft first to check it arrives as expected.
 
@@ -87,6 +116,7 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
   "category_id": "47140",
   "category_name": "Clothes, Shoes & Accessories > Men > Men's Shoes > Trainers",
   "condition": "USED",
+  "condition_suggestion": "Pre-owned - Good",
   "price": 35.00,
   "price_note": "Similar used pairs are listed around £30–45; light creasing, clean soles.",
   "specifics": {
@@ -116,8 +146,9 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 - **condition:** `NEW` (unused, with tags or in the box) or `USED`. The drafts template only takes
   these two, and in the test draft eBay left the condition itself unset (the value only went into
   the condition description), so the user picks it in eBay. Put the condition you would choose
-  (e.g. "Pre-owned - Good", "New with box") in `notes`, and describe the real condition in the
-  description.
+  from eBay's list for that category (e.g. "Pre-owned - Good", "New with box") in
+  `condition_suggestion`; it is shown in the preview and the checklist. Describe the real
+  condition in the description.
 - **price:** your estimate, in the site's currency, for a Buy It Now listing that sells within a
   few weeks. Search the web for similar items on that site when that helps, and give the reason
   in `price_note`. The user sets the final price.
@@ -177,8 +208,10 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 
 ### 3. Preview and revise
 
-- Run `preview`, then tell the user to open `preview.html` in the working folder in a browser.
-  Summarise per item what is blank or uncertain, from the script's output and your notes.
+- Run `preview --open`. It opens the page in the user's browser; if it says it couldn't (for
+  example inside a container), give the user the file's full path to open themselves.
+  Summarise per item what is blank or uncertain, from the script's output and your notes, and
+  remind them they can ask for changes in plain words.
 - Apply changes the user asks for ("it's the 2019 model", "drop photo 3", "price it at 20"),
   then rebuild the preview. If they say photos belong to a different item, move them and redo
   both items.
@@ -187,14 +220,16 @@ Look closely at all of an item's photos (labels, model numbers, sizes, tags, wea
 ### 4. Write the drafts CSV
 
 - Run `csv`. If it lists problems, fix them (or ask the user) and run it again.
-- Give the user the CSV's path and the upload steps:
+- Give the user the CSV's full path and the steps, and tell them the same steps are saved as a
+  tick-list next to it (the `-checklist.txt` file the script printed):
   1. On their eBay site (ebay.co.uk for UK): Seller Hub → Reports → Uploads → Upload template,
      and choose the CSV. Don't open and resave it in Excel first.
   2. Check the upload result for errors.
   3. Open each draft in Seller Hub or the eBay app. Its Custom label (SKU) is the item id. Then:
-     add the photos (from the phone, in the order in `item.json`; eBay asks for at least 5),
+     add the photos (from the phone, in the order in the checklist; eBay asks for at least 5),
      pick the condition, check the category, apply the item specifics eBay suggests and fill
      any required ones it misses (from the description's DETAILS), check
      postage, and publish.
+- Offer to help if the upload shows an error: ask them to paste the message.
 - Items marked `in-csv` are not written again. If an upload failed and the user wants it redone,
   set those items back to `approved` and rerun `csv`.

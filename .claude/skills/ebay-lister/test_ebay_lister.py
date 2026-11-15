@@ -1,6 +1,8 @@
 """Tests for ebay_lister.py. Run: python -m unittest test_ebay_lister.py (from this folder)."""
 
+import contextlib
 import csv
+import io
 import json
 import tempfile
 import unittest
@@ -45,7 +47,7 @@ class ItemsTestCase(unittest.TestCase):
                                  "--out-dir", str(self.root / "out")])
 
     def read_csv(self):
-        [path] = (self.root / "out").glob("drafts-*.csv")
+        [path] = (self.root / "out").glob("drafts-*[0-9].csv")
         raw = path.read_bytes()
         with open(path, newline="", encoding="utf-8") as f:
             return raw, list(csv.reader(f))
@@ -106,6 +108,18 @@ class CsvTest(ItemsTestCase):
         untouched = json.loads((self.items / "02-other" / "item.json").read_text())
         self.assertEqual(untouched["status"], "draft")
 
+    def test_writes_a_checklist_of_what_is_left_to_do_in_ebay(self):
+        self.add(make_item(photos=["photos/IMG_0002.jpg", "photos/IMG_0001.jpg"],
+                           condition_suggestion="Pre-owned - Good"))
+        self.run_csv()
+        [path] = (self.root / "out").glob("drafts-*-checklist.txt")
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("01-nike-trainers: Nike Air Max 90 Trainers UK 9 Blue", text)
+        self.assertIn("Add the 2 photo(s) in this order: IMG_0002.jpg, IMG_0001.jpg", text)
+        self.assertIn("(suggested: Pre-owned - Good)", text)
+        self.assertIn("it may ask you for: Style", text)
+        self.assertIn("£25.00", text)
+
     def test_invalid_item_blocks_the_whole_csv(self):
         self.add(make_item())
         self.add(make_item(id="02-bad", category_id=""))
@@ -120,6 +134,25 @@ class CsvTest(ItemsTestCase):
                 ebay_lister.csv_rows([make_item()])
         finally:
             ebay_lister.ACTION = original
+
+
+class StartTest(ItemsTestCase):
+    def test_creates_the_inbox_and_reports_what_is_there(self):
+        inbox = self.root / "inbox"
+        self.add(make_item())
+        args = ["start", "--inbox", str(inbox), "--items", str(self.items)]
+        self.assertEqual(ebay_lister.main(args), 0)
+        self.assertTrue(inbox.is_dir())
+
+        for name in ("IMG_1.jpg", "IMG_2.JPG", "photos.zip", "IMG_3.heic"):
+            (inbox / name).write_bytes(b"")
+        shown = io.StringIO()
+        with contextlib.redirect_stdout(shown):
+            ebay_lister.main(args)
+        self.assertIn("2 photo(s), 1 zip file(s)", shown.getvalue())
+        self.assertIn("IMG_3.heic", shown.getvalue())
+        self.assertIn("Items so far: 1 (1 approved", shown.getvalue())
+        self.assertIn("eBay site: UK", shown.getvalue())
 
 
 US_TEMPLATE = (
@@ -177,6 +210,12 @@ class PreviewTest(ItemsTestCase):
         self.assertIn('src="items/01-nike-trainers/photos/IMG_0001.jpg"', page)
         self.assertIn('<tr class="flag"><td>Style</td>', page)
         self.assertIn("£25.00", page)
+
+    def test_preview_shows_the_condition_to_pick_in_ebay(self):
+        self.add(make_item(condition_suggestion="Pre-owned - Good"))
+        out = self.root / "preview.html"
+        ebay_lister.main(["preview", "--items", str(self.items), "--out", str(out)])
+        self.assertIn("pick in eBay: Pre-owned - Good", out.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
