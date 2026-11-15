@@ -5,7 +5,7 @@
 A [Claude Code](https://claude.com/claude-code) skill that turns phone photos of things you
 want to sell into eBay draft listings.
 
-<img src="docs/preview.jpg" alt="The preview page: a brown crossbody bag listing with three photos, title, price, item specifics with brand and material highlighted as unknown, and a description listing features and condition" width="640">
+![The preview page: a brown crossbody bag listing with three photos, title, price, item specifics with brand and material highlighted as unknown, and a description listing features and condition](docs/preview.jpg)
 
 *A real item, written from three phone photos: the push-lock clasp, the two compartments, the
 zip pocket and the scuffs on the back. The photos don't show the brand or material, so those
@@ -158,7 +158,6 @@ making it public.
 skills/ebaylister/            the skill: SKILL.md, ebay_lister.py, tests, README
 .claude-plugin/               plugin and marketplace manifests, for /plugin install
 .github/workflows/tests.yml   runs the tests on Linux, Windows and macOS
-docs/preview.jpg              the screenshot above
 ```
 
 ## Working on it
