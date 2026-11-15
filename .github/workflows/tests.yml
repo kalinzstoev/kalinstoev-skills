@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The skill runs on the user's own machine, so test the systems they use.
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (standard library only, nothing to install)
+        working-directory: skills/ebay-lister
+        run: python -m unittest -v test_ebay_lister.py
+      - name: Plugin manifests are valid JSON
+        run: |
+          python -m json.tool .claude-plugin/plugin.json
+          python -m json.tool .claude-plugin/marketplace.json

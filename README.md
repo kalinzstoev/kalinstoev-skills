@@ -1,7 +1,15 @@
 # eBay Lister
 
+[![tests](https://github.com/kalinzstoev/ebay-lister/actions/workflows/tests.yml/badge.svg)](https://github.com/kalinzstoev/ebay-lister/actions/workflows/tests.yml)
+
 A [Claude Code](https://claude.com/claude-code) skill that turns phone photos of things you
 want to sell into eBay **draft** listings.
+
+<img src="docs/preview.jpg" alt="The preview page: a backpack listing with its photos, title, price, item specifics with one gap highlighted, and a description listing features and condition" width="640">
+
+*The preview page for a real item. Everything in it was read from three phone photos: the
+swivel clip, the press studs under the flap, the small chip on the clip. The highlighted row
+is something the photos didn't show, so it was left blank and not guessed.*
 
 You take photos and drop them in a folder. Claude looks at them, works out which photos belong
 to which item, and reads what is actually there: the brand on a label, the material, the
@@ -138,11 +146,37 @@ Claude what you want differently during a run.
   `skills/ebay-lister` folder into `~/.claude/skills/` (on Windows,
   `%USERPROFILE%\.claude\skills\`). The skill is then called `/ebay-lister`.
 
+## How it is built, and why
+
+The full reasoning is in [docs/design.md](docs/design.md). The short version:
+
+- **Claude does the judgement, a script does the exact work.** Reading photos and writing a
+  listing is what a model is good at, so that lives in `SKILL.md` as instructions. Checking a
+  title is under 80 characters, or producing a CSV eBay will accept byte for byte, is not, so
+  that lives in `ebay_lister.py` (Python, standard library only) with tests.
+- **Safe by construction, not by instruction.** The tool has no way to reach eBay: no API, no
+  keys, no login. The script can only write rows marked `Draft`, and a test checks that it
+  refuses anything else. The worst a mistake can do is create a draft you delete.
+- **Decisions came from evidence.** The first design used eBay's APIs. Research
+  ([docs/ebay-api-research.md](docs/ebay-api-research.md)) and one test upload showed the
+  drafts CSV was enough, and that eBay ignores item specifics in it. So the API was dropped,
+  and the specifics go into the description and a tick-list instead.
+- **Tested the way it is used.** Besides the unit tests, a fresh Claude with no knowledge of
+  the project ran the skill from a clean copy against real photos, with a person's part played
+  in plain words. That run found the skill stating "waterproof" from brand knowledge, which led
+  to the rule that only what the photos show may be stated.
+- **Honest about limits.** Only eBay UK is tested. Other sites work from eBay's own template
+  file for that site instead of header values guessed in code.
+
+It was built with Claude Code, by one person, for a real clear-out: nine items listed with it
+before it was made public.
+
 ## Project layout
 
 ```
 skills/ebay-lister/           the skill: SKILL.md, ebay_lister.py, tests, README
 .claude-plugin/               plugin and marketplace manifests, for /plugin install
+.github/workflows/tests.yml   runs the tests on Linux, Windows and macOS
 docs/design.md                why it works the way it does
 docs/ebay-api-research.md     research into eBay's APIs and the drafts upload
 docs/dev-container.md         optional Docker setup for working on the project
